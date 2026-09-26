@@ -135,7 +135,10 @@ export function Dashboard({
             <Input
               ref={inputRef}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onValueChange={setQuery}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
               placeholder={`Cerca tra ${total + bookmarkTotal} link…`}
               aria-label="Cerca servizi e preferiti"
               className="h-12 rounded-xl border-white/10 bg-white/5 pr-12 pl-11 text-base text-white placeholder:text-white/40 md:text-base"

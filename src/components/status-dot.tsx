@@ -20,10 +20,12 @@ export function StatusDot({ group, index, interval }: { group: number; index: nu
         if (!cancelled) setStatus({ up: false, error: "Dashboard non raggiungibile" });
       }
     };
-    check();
+    // Stagger the first check so a full page of services doesn't hammer the network at once.
+    const delay = setTimeout(check, (group * 3 + index) * 120);
     const id = setInterval(check, interval * 1000);
     return () => {
       cancelled = true;
+      clearTimeout(delay);
       clearInterval(id);
     };
   }, [group, index, interval]);
