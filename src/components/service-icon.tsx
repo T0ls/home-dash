@@ -36,7 +36,7 @@ export function ServiceIcon({ icon, name, className }: { icon?: string; name: st
   return (
     <div className={base}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" className="size-7 object-contain" loading="lazy" onError={() => setFailed(true)} />
+      <img src={src} alt="" className="size-[65%] object-contain" loading="lazy" onError={() => setFailed(true)} />
     </div>
   );
 }

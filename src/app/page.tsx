@@ -17,7 +17,23 @@ export default async function Page() {
   await connection();
   const result = await loadDashboard().catch((err: Error) => err);
   if (!(result instanceof Error)) {
-    return <Dashboard settings={result.settings} groups={result.groups} />;
+    return (
+      <>
+        {result.settings.backgroundImage && (
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-0 -z-20 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${result.settings.backgroundImage})`,
+              filter: result.settings.backgroundBlur ? `blur(${result.settings.backgroundBlur}px)` : undefined,
+              opacity: result.settings.backgroundOpacity,
+              transform: result.settings.backgroundBlur ? "scale(1.05)" : undefined,
+            }}
+          />
+        )}
+        <Dashboard settings={result.settings} groups={result.groups} bookmarks={result.bookmarks} />
+      </>
+    );
   }
   const file = result instanceof ConfigError ? result.file : undefined;
   return (

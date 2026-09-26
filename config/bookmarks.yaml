@@ -1,0 +1,16 @@
+# Preferiti / link rapidi, mostrati sopra i servizi.
+# Stesso formato a gruppi di services.yaml.
+
+- Preferiti:
+    - YouTube:
+        href: https://youtube.com
+        icon: si-youtube
+    - Reddit:
+        href: https://reddit.com
+        icon: si-reddit
+    - Gmail:
+        href: https://mail.google.com
+        icon: si-gmail
+    - Maps:
+        href: https://maps.google.com
+        icon: 🗺️

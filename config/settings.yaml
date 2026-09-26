@@ -16,3 +16,8 @@ statusCheck: true
 statusInterval: 60
 
 showClock: true
+
+# Sfondo opzionale (URL di un'immagine). Lascia commentato per lo sfondo di default.
+# backgroundImage: https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920
+# backgroundBlur: 8          # 0-40
+# backgroundOpacity: 0.35    # 0-1, quanto l'immagine è visibile sotto il velo scuro

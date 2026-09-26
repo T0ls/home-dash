@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ServiceIcon } from "@/components/service-icon";
 import { StatusDot } from "@/components/status-dot";
 import { cn } from "@/lib/utils";
-import type { ServiceGroup, Settings } from "@/lib/config";
+import type { BookmarkGroup, ServiceGroup, Settings } from "@/lib/config";
 
 const GRID_COLS: Record<number, string> = {
   1: "lg:grid-cols-1",
@@ -31,7 +31,8 @@ function Clock() {
   }, []);
   if (!now) return <div className="h-12" />;
   const hour = now.getHours();
-  const greeting = hour < 6 ? "Buonanotte" : hour < 13 ? "Buongiorno" : hour < 18 ? "Buon pomeriggio" : "Buonasera";
+  const greeting =
+    hour < 6 ? "Buonanotte" : hour < 13 ? "Buongiorno" : hour < 18 ? "Buon pomeriggio" : "Buonasera";
   return (
     <div className="text-left sm:text-right">
       <div className="font-mono text-3xl font-semibold tabular-nums tracking-tight text-white">
@@ -44,7 +45,15 @@ function Clock() {
   );
 }
 
-export function Dashboard({ settings, groups }: { settings: Settings; groups: ServiceGroup[] }) {
+export function Dashboard({
+  settings,
+  groups,
+  bookmarks,
+}: {
+  settings: Settings;
+  groups: ServiceGroup[];
+  bookmarks: BookmarkGroup[];
+}) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -83,8 +92,25 @@ export function Dashboard({ settings, groups }: { settings: Settings; groups: Se
       .filter((group) => group.services.length > 0);
   }, [groups, query]);
 
-  const firstMatch = filtered[0]?.services.find((s) => s.href);
+  const filteredBookmarks = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return bookmarks;
+    return bookmarks
+      .map((group) => ({
+        ...group,
+        bookmarks: group.bookmarks.filter(
+          (b) =>
+            group.name.toLowerCase().includes(q) ||
+            b.name.toLowerCase().includes(q) ||
+            b.href.toLowerCase().includes(q),
+        ),
+      }))
+      .filter((g) => g.bookmarks.length > 0);
+  }, [bookmarks, query]);
+
+  const firstMatch = filtered[0]?.services.find((s) => s.href) ?? filteredBookmarks[0]?.bookmarks[0];
   const total = groups.reduce((n, g) => n + g.services.length, 0);
+  const bookmarkTotal = bookmarks.reduce((n, g) => n + g.bookmarks.length, 0);
 
   return (
     <TooltipProvider>
@@ -97,9 +123,9 @@ export function Dashboard({ settings, groups }: { settings: Settings; groups: Se
           {settings.showClock && <Clock />}
         </header>
 
-        {total > 0 && (
+        {(total > 0 || bookmarkTotal > 0) && (
           <form
-            className="relative mb-10"
+            className="relative mb-8"
             onSubmit={(e) => {
               e.preventDefault();
               if (query && firstMatch?.href) window.open(firstMatch.href, firstMatch.target);
@@ -110,8 +136,8 @@ export function Dashboard({ settings, groups }: { settings: Settings; groups: Se
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={`Cerca tra ${total} servizi…`}
-              aria-label="Cerca servizi"
+              placeholder={`Cerca tra ${total + bookmarkTotal} link…`}
+              aria-label="Cerca servizi e preferiti"
               className="h-12 rounded-xl border-white/10 bg-white/5 pr-12 pl-11 text-base text-white placeholder:text-white/40 md:text-base"
             />
             {query ? (
@@ -131,13 +157,37 @@ export function Dashboard({ settings, groups }: { settings: Settings; groups: Se
           </form>
         )}
 
-        {total === 0 ? (
+        {filteredBookmarks.length > 0 && (
+          <div className="mb-10 space-y-4">
+            {filteredBookmarks.map((group) => (
+              <section key={group.name} aria-label={group.name}>
+                <h2 className="mb-2 text-xs font-semibold tracking-widest text-white/40 uppercase">{group.name}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {group.bookmarks.map((b) => (
+                    <a
+                      key={b.name}
+                      href={b.href}
+                      target={b.target}
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pr-3.5 pl-1.5 text-sm text-white/90 transition hover:border-white/25 hover:bg-white/[0.09]"
+                    >
+                      <ServiceIcon icon={b.icon} name={b.name} className="size-7 rounded-full ring-0" />
+                      <span>{b.name}</span>
+                    </a>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
+
+        {total === 0 && bookmarkTotal === 0 ? (
           <EmptyConfig />
-        ) : filtered.length === 0 ? (
+        ) : filtered.length === 0 && filteredBookmarks.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 py-16 text-center">
-            <p className="text-white/70">Nessun servizio corrisponde a “{query}”.</p>
+            <p className="text-white/70">Nessun risultato per “{query}”.</p>
             <button onClick={() => setQuery("")} className="mt-2 text-sm text-sky-400 hover:underline">
-              Mostra tutti i servizi
+              Mostra tutto
             </button>
           </div>
         ) : (
@@ -207,8 +257,8 @@ function EmptyConfig() {
     <div className="rounded-2xl border border-dashed border-white/15 p-8 sm:p-12">
       <h2 className="text-lg font-medium text-white">Nessun servizio configurato</h2>
       <p className="mt-2 max-w-xl text-white/60">
-        Aggiungi i tuoi servizi nel file <code className="text-sky-300">services.yaml</code> dentro la cartella di
-        configurazione, poi ricarica la pagina.
+        Aggiungi i tuoi servizi in <code className="text-sky-300">services.yaml</code> e i preferiti in{" "}
+        <code className="text-sky-300">bookmarks.yaml</code>, poi ricarica la pagina.
       </p>
       <pre className="mt-6 overflow-x-auto rounded-xl bg-black/40 p-4 text-sm text-white/80">
         {`- Media:

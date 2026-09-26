@@ -58,7 +58,22 @@ docker run -d --name homepage -p 3000:3000 -v "$(pwd)/config:/app/config" --rest
 
 Il controllo di stato viene eseguito **dal server** (cioè dal container), quindi usa indirizzi raggiungibili dal container. Qualsiasi risposta HTTP sotto 500 (anche 401/403) conta come "online"; i certificati self-signed sono accettati.
 
+### `config/bookmarks.yaml`
+
+Preferiti/link rapidi, mostrati sopra i servizi come chip compatti.
+
+```yaml
+- Preferiti:
+    - YouTube:
+        href: https://youtube.com
+        icon: si-youtube
+    - Reddit:
+        href: https://reddit.com
+        icon: si-reddit
+```
+
 ### `config/settings.yaml`
+
 
 | Campo            | Default                              | Descrizione                                  |
 | ---------------- | ------------------------------------ | -------------------------------------------- |
@@ -68,7 +83,10 @@ Il controllo di stato viene eseguito **dal server** (cioè dal container), quind
 | `target`         | `_blank`                             | Come aprire i link                           |
 | `statusCheck`    | `true`                               | Abilita il controllo di stato per tutti      |
 | `statusInterval` | `60`                                 | Intervallo del controllo in secondi (min. 5) |
-| `showClock`      | `true`                               | Mostra orologio e data                       |
+| `showClock`          | `true`                               | Mostra orologio e data                       |
+| `backgroundImage`    | —                                    | URL di un'immagine di sfondo                 |
+| `backgroundBlur`     | `0`                                  | Sfocatura dello sfondo in px (0-40)          |
+| `backgroundOpacity`  | `0.35`                               | Visibilità dello sfondo (0-1)                |
 
 Se un file YAML contiene un errore, la pagina mostra il messaggio con la riga da correggere.
 
