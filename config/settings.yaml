@@ -1,0 +1,18 @@
+# Impostazioni generali della dashboard.
+# Le modifiche sono applicate al prossimo refresh della pagina, senza riavviare il container.
+
+title: Homepage
+subtitle: I tuoi servizi, a portata di clic.
+
+# Numero massimo di colonne della griglia su schermi grandi (1-6).
+columns: 4
+
+# Come aprire i link: _blank (nuova scheda) o _self (stessa scheda).
+target: _blank
+
+# Controlla se i servizi sono raggiungibili (pallino verde/rosso).
+statusCheck: true
+# Ogni quanti secondi ripetere il controllo.
+statusInterval: 60
+
+showClock: true

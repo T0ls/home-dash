@@ -1,0 +1,58 @@
+# Elenco dei servizi, divisi in gruppi.
+#
+# Ogni servizio accetta:
+#   href:        link da aprire (obbligatorio per renderlo cliccabile)
+#   description: breve descrizione
+#   icon:        - nome da https://dashboard-icons.homarr.dev (es. jellyfin, proxmox)
+#                - "si-<nome>" per Simple Icons (es. si-github)
+#                - URL di un'immagine (https://...)
+#                - un'emoji (es. 🎬)
+#   ping:        URL alternativo da usare per il controllo di stato
+#                (es. indirizzo interno), oppure false per disattivarlo
+#   target:      _blank o _self, sovrascrive l'impostazione globale
+
+- Media:
+    - Jellyfin:
+        href: http://192.168.1.10:8096
+        description: Film e serie TV
+        icon: jellyfin
+    - Immich:
+        href: http://192.168.1.10:2283
+        description: Foto e video di famiglia
+        icon: immich
+    - Navidrome:
+        href: http://192.168.1.10:4533
+        description: Libreria musicale
+        icon: navidrome
+
+- Infrastruttura:
+    - Proxmox:
+        href: https://192.168.1.2:8006
+        description: Virtualizzazione
+        icon: proxmox
+    - Portainer:
+        href: http://192.168.1.10:9000
+        description: Gestione container Docker
+        icon: portainer
+    - Pi-hole:
+        href: http://192.168.1.3/admin
+        description: DNS e blocco pubblicità
+        icon: pi-hole
+    - Router:
+        href: http://192.168.1.1
+        description: Pannello di amministrazione
+        icon: 📡
+
+- Produttività:
+    - Nextcloud:
+        href: http://192.168.1.10:8080
+        description: File e calendario
+        icon: nextcloud
+    - Vaultwarden:
+        href: http://192.168.1.10:8081
+        description: Password manager
+        icon: vaultwarden
+    - GitHub:
+        href: https://github.com
+        description: Repository di codice
+        icon: si-github

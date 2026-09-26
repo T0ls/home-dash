@@ -1,0 +1,12 @@
+services:
+  homepage:
+    build: .
+    image: homepage-dashboard:latest
+    container_name: homepage
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Qui dentro vivono settings.yaml e services.yaml.
+      # Se la cartella è vuota al primo avvio, viene popolata con i file di esempio.
+      - ./config:/app/config
