@@ -1,0 +1,16 @@
+services:
+  homepage:
+    build: .
+    image: homepage-dashboard:latest
+    container_name: homepage
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # /app/data
+      #   config/       settings.yaml, services.yaml, users.yaml
+      #   icons/        your files (icon: logo.png)
+      #   cache/icons/  catalog copies, only when cacheIcons is true
+      #   users/<name>/ that user's home.yaml and uploaded background
+      # An empty config/ is filled from the examples on first start.
+      - ./data:/app/data

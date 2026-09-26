@@ -1,0 +1,52 @@
+# General settings. A refresh picks up edits. No container restart.
+
+title: Homepage
+# subtitle: Home lab
+
+# Columns on a wide screen (1-6).
+columns: 4
+
+# _blank (new tab) or _self (same tab).
+target: _blank
+
+# Save Dashboard Icons and Simple Icons under cache/icons/ the first time
+# they are shown. Files you put in icons/ are always served from disk.
+# Names: https://dashboardicons.com/
+cacheIcons: false
+
+# Green/red dot on each service.
+statusCheck: true
+# Seconds between checks.
+statusInterval: 60
+
+showClock: true
+
+# false hides bookmarks on the home page and in Customize.
+# The saved list stays in that user's home file.
+showBookmarks: true
+
+# true (the default, also when this key is missing): one local user,
+# no Authelia headers, home in users/local/.
+# false: opt in to Authelia and match headers to users.yaml.
+# auth.enabled: false is not this mode. That shows a guest who cannot customize.
+singleUser: true
+
+# Ignored for identity when singleUser is true.
+# nginx, in the location that proxies here, after auth_request:
+#   auth_request_set $user   $upstream_http_remote_user;
+#   auth_request_set $name   $upstream_http_remote_name;
+#   auth_request_set $email  $upstream_http_remote_email;
+#   auth_request_set $groups $upstream_http_remote_groups;
+#   proxy_set_header Remote-User   $user;
+#   proxy_set_header Remote-Name   $name;
+#   proxy_set_header Remote-Email  $email;
+#   proxy_set_header Remote-Groups $groups;
+auth:
+  enabled: true
+  headers:
+    user: Remote-User
+    name: Remote-Name
+    email: Remote-Email
+    groups: Remote-Groups
+  # accountUrl: https://auth.example.com/settings
+  # logoutUrl: https://auth.example.com/logout

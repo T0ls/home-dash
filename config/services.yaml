@@ -1,0 +1,67 @@
+# Service list, split into groups.
+#
+# Each service accepts:
+#   href:        link to open (required to make it clickable)
+#   description: short description
+#   icon:        - name from https://dashboard-icons.homarr.dev (e.g. jellyfin, proxmox).
+#                  Browse examples at https://dashboardicons.com/
+#                - "si-<name>" for Simple Icons (e.g. si-github)
+#                - a file in the icons/ folder of the data volume (e.g. logo.png)
+#                - an image URL (https://...)
+#                - an emoji (e.g. 🎬)
+#   ping:        alternate URL for the status check (e.g. an internal address),
+#                or false to disable it
+#   target:      _blank or _self, overrides the global setting
+#   users:       list of Authelia usernames or displayNames that may see it
+#   groups:      list of Authelia groups that may see it
+#                (omit both users and groups to show it to everyone;
+#                 role: admin in users.yaml always sees every service;
+#                 single-user mode (the default) shows every service to the local user)
+
+- Media:
+    - Jellyfin:
+        href: http://192.168.1.10:8096
+        description: Movies and TV shows
+        icon: jellyfin
+    - Immich:
+        href: http://192.168.1.10:2283
+        description: Family photos and videos
+        icon: immich
+    - Navidrome:
+        href: http://192.168.1.10:4533
+        description: Music library
+        icon: navidrome
+
+- Infrastructure:
+    - Proxmox:
+        href: https://192.168.1.2:8006
+        description: Virtualization
+        icon: proxmox
+        # users: [alex]
+        # groups: [admins]
+    - Portainer:
+        href: http://192.168.1.10:9000
+        description: Docker container management
+        icon: portainer
+    - Pi-hole:
+        href: http://192.168.1.3/admin
+        description: DNS and ad blocking
+        icon: pi-hole
+    - Router:
+        href: http://192.168.1.1
+        description: Admin panel
+        icon: 📡
+
+- Productivity:
+    - Nextcloud:
+        href: http://192.168.1.10:8080
+        description: Files and calendar
+        icon: nextcloud
+    - Vaultwarden:
+        href: http://192.168.1.10:8081
+        description: Password manager
+        icon: vaultwarden
+    - GitHub:
+        href: https://github.com
+        description: Code repositories
+        icon: si-github

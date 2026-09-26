@@ -1,0 +1,15 @@
+# Used when singleUser is false (Authelia).
+# The default is single-user, which ignores this file and writes users/local/.
+#
+# Username is matched first, then displayName. Both comparisons ignore case.
+# displayName is required. username, email, avatar, and role are optional.
+# role: admin sees every service. Any other role is only a label in the menu.
+
+users:
+  - displayName: Alex Morgan
+    username: alex
+    email: alex@example.com
+    role: Admin
+  - displayName: Sam Taylor
+    username: sam
+    role: User
