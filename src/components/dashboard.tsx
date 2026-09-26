@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, Search, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ServiceIcon } from "@/components/service-icon";
 import { StatusDot } from "@/components/status-dot";
@@ -132,16 +131,16 @@ export function Dashboard({
             }}
           >
             <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-white/40" />
-            <Input
+            <input
               ref={inputRef}
               value={query}
-              onValueChange={setQuery}
+              onChange={(e) => setQuery(e.target.value)}
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
               placeholder={`Cerca tra ${total + bookmarkTotal} link…`}
               aria-label="Cerca servizi e preferiti"
-              className="h-12 rounded-xl border-white/10 bg-white/5 pr-12 pl-11 text-base text-white placeholder:text-white/40 md:text-base"
+              className="h-12 w-full rounded-xl border border-white/10 bg-white/5 pr-12 pl-11 text-base text-white outline-none placeholder:text-white/40 focus-visible:border-sky-400/50 focus-visible:ring-3 focus-visible:ring-sky-400/30"
             />
             {query ? (
               <button

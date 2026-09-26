@@ -7,7 +7,10 @@ const EMOJI = /\p{Extended_Pictographic}/u;
 
 function resolve(icon: string): string | null {
   if (/^(https?:)?\/\//.test(icon) || icon.startsWith("/")) return icon;
-  if (icon.startsWith("si-")) return `https://cdn.simpleicons.org/${icon.slice(3)}/white`;
+  if (icon.startsWith("si-")) {
+    // jsDelivr serves Simple Icons with CORS; cdn.simpleicons.org is often blocked by CORP.
+    return `https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/${icon.slice(3)}.svg`;
+  }
   const name = icon.replace(/\.(png|svg|webp)$/, "");
   return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/${name}.svg`;
 }
@@ -36,7 +39,13 @@ export function ServiceIcon({ icon, name, className }: { icon?: string; name: st
   return (
     <div className={base}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" className="size-[65%] object-contain" loading="lazy" onError={() => setFailed(true)} />
+      <img
+        src={src}
+        alt=""
+        className={cn("size-[65%] object-contain", icon?.startsWith("si-") && "brightness-0 invert")}
+        loading="lazy"
+        onError={() => setFailed(true)}
+      />
     </div>
   );
 }
