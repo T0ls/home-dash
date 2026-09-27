@@ -32,14 +32,14 @@ function Clock() {
   if (!now) return <div className="h-12" />;
   const hour = now.getHours();
   const greeting =
-    hour < 6 ? "Buonanotte" : hour < 13 ? "Buongiorno" : hour < 18 ? "Buon pomeriggio" : "Buonasera";
+    hour < 6 ? "Good night" : hour < 13 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   return (
     <div className="text-left sm:text-right">
       <div className="font-mono text-3xl font-semibold tabular-nums tracking-tight text-white">
-        {now.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
+        {now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
       </div>
       <div className="text-sm text-white/50">
-        {greeting} · {now.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
+        {greeting} · {now.toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" })}
       </div>
     </div>
   );
@@ -129,7 +129,7 @@ export function Dashboard({
             <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
               {user ? (
                 <>
-                  Benvenuto, <span className="text-sky-300">{user.displayName.split(/\s+/)[0]}</span>
+                  Welcome, <span className="text-sky-300">{user.displayName.split(/\s+/)[0]}</span>
                 </>
               ) : (
                 settings.title
@@ -156,8 +156,8 @@ export function Dashboard({
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
-              placeholder={`Cerca tra ${total + bookmarkTotal} link…`}
-              aria-label="Cerca servizi e preferiti"
+              placeholder={`Search ${total + bookmarkTotal} links…`}
+              aria-label="Search services and bookmarks"
               className="h-12 w-full rounded-xl border border-white/10 bg-white/5 pr-12 pl-11 text-base text-white outline-none placeholder:text-white/40 focus-visible:border-sky-400/50 focus-visible:ring-3 focus-visible:ring-sky-400/30"
             />
             {query ? (
@@ -165,7 +165,7 @@ export function Dashboard({
                 type="button"
                 onClick={() => setQuery("")}
                 className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-white/50 hover:bg-white/10 hover:text-white"
-                aria-label="Cancella ricerca"
+                aria-label="Clear search"
               >
                 <X className="size-4" />
               </button>
@@ -205,9 +205,9 @@ export function Dashboard({
           <EmptyConfig />
         ) : filtered.length === 0 && filteredBookmarks.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 py-16 text-center">
-            <p className="text-white/70">Nessun risultato per “{query}”.</p>
+            <p className="text-white/70">No results for “{query}”.</p>
             <button onClick={() => setQuery("")} className="mt-2 text-sm text-sky-400 hover:underline">
-              Mostra tutto
+              Show all
             </button>
           </div>
         ) : (
@@ -275,16 +275,16 @@ export function Dashboard({
 function EmptyConfig() {
   return (
     <div className="rounded-2xl border border-dashed border-white/15 p-8 sm:p-12">
-      <h2 className="text-lg font-medium text-white">Nessun servizio configurato</h2>
+      <h2 className="text-lg font-medium text-white">No services configured</h2>
       <p className="mt-2 max-w-xl text-white/60">
-        Aggiungi i tuoi servizi in <code className="text-sky-300">services.yaml</code> e i preferiti in{" "}
-        <code className="text-sky-300">bookmarks.yaml</code>, poi ricarica la pagina.
+        Add your services in <code className="text-sky-300">services.yaml</code> and bookmarks in{" "}
+        <code className="text-sky-300">bookmarks.yaml</code>, then refresh the page.
       </p>
       <pre className="mt-6 overflow-x-auto rounded-xl bg-black/40 p-4 text-sm text-white/80">
         {`- Media:
     - Jellyfin:
         href: http://192.168.1.10:8096
-        description: Film e serie TV
+        description: Movies and TV shows
         icon: jellyfin`}
       </pre>
     </div>

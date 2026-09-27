@@ -1,52 +1,52 @@
-# Elenco dei servizi, divisi in gruppi.
+# Service list, split into groups.
 #
-# Ogni servizio accetta:
-#   href:        link da aprire (obbligatorio per renderlo cliccabile)
-#   description: breve descrizione
-#   icon:        - nome da https://dashboard-icons.homarr.dev (es. jellyfin, proxmox)
-#                - "si-<nome>" per Simple Icons (es. si-github)
-#                - URL di un'immagine (https://...)
-#                - un'emoji (es. 🎬)
-#   ping:        URL alternativo da usare per il controllo di stato
-#                (es. indirizzo interno), oppure false per disattivarlo
-#   target:      _blank o _self, sovrascrive l'impostazione globale
+# Each service accepts:
+#   href:        link to open (required to make it clickable)
+#   description: short description
+#   icon:        - name from https://dashboard-icons.homarr.dev (e.g. jellyfin, proxmox)
+#                - "si-<name>" for Simple Icons (e.g. si-github)
+#                - an image URL (https://...)
+#                - an emoji (e.g. 🎬)
+#   ping:        alternate URL for the status check (e.g. an internal address),
+#                or false to disable it
+#   target:      _blank or _self, overrides the global setting
 
 - Media:
     - Jellyfin:
         href: http://192.168.1.10:8096
-        description: Film e serie TV
+        description: Movies and TV shows
         icon: jellyfin
     - Immich:
         href: http://192.168.1.10:2283
-        description: Foto e video di famiglia
+        description: Family photos and videos
         icon: immich
     - Navidrome:
         href: http://192.168.1.10:4533
-        description: Libreria musicale
+        description: Music library
         icon: navidrome
 
-- Infrastruttura:
+- Infrastructure:
     - Proxmox:
         href: https://192.168.1.2:8006
-        description: Virtualizzazione
+        description: Virtualization
         icon: proxmox
     - Portainer:
         href: http://192.168.1.10:9000
-        description: Gestione container Docker
+        description: Docker container management
         icon: portainer
     - Pi-hole:
         href: http://192.168.1.3/admin
-        description: DNS e blocco pubblicità
+        description: DNS and ad blocking
         icon: pi-hole
     - Router:
         href: http://192.168.1.1
-        description: Pannello di amministrazione
+        description: Admin panel
         icon: 📡
 
-- Produttività:
+- Productivity:
     - Nextcloud:
         href: http://192.168.1.10:8080
-        description: File e calendario
+        description: Files and calendar
         icon: nextcloud
     - Vaultwarden:
         href: http://192.168.1.10:8081
@@ -54,5 +54,5 @@
         icon: vaultwarden
     - GitHub:
         href: https://github.com
-        description: Repository di codice
+        description: Code repositories
         icon: si-github

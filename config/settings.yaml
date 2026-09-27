@@ -1,24 +1,24 @@
-# Impostazioni generali della dashboard.
-# Le modifiche sono applicate al prossimo refresh della pagina, senza riavviare il container.
+# General dashboard settings.
+# Changes apply on the next page refresh — no container restart needed.
 
 title: Homepage
-subtitle: I tuoi servizi, a portata di clic.
+subtitle: Your services, one click away.
 
-# Numero massimo di colonne della griglia su schermi grandi (1-6).
+# Max number of columns on large screens (1-6).
 columns: 4
 
-# Come aprire i link: _blank (nuova scheda) o _self (stessa scheda).
+# How to open links: _blank (new tab) or _self (same tab).
 target: _blank
 
-# Controlla se i servizi sono raggiungibili (pallino verde/rosso).
+# Check whether services are reachable (green/red status dot).
 statusCheck: true
-# Ogni quanti secondi ripetere il controllo.
+# How often to re-check, in seconds.
 statusInterval: 60
 
 showClock: true
 
-# Utenti tramite Authelia (forward auth su nginx).
-# nginx deve inoltrare al container gli header con i dati dell'utente, per esempio:
+# Users via Authelia (forward auth on nginx).
+# nginx must forward the Authelia identity headers to the container, for example:
 #   auth_request_set $user   $upstream_http_remote_user;
 #   auth_request_set $name   $upstream_http_remote_name;
 #   auth_request_set $email  $upstream_http_remote_email;
@@ -34,11 +34,11 @@ auth:
     name: Remote-Name
     email: Remote-Email
     groups: Remote-Groups
-  # Link opzionali mostrati nel menu utente.
+  # Optional links shown in the user menu.
   # accountUrl: https://auth.example.com/settings
   # logoutUrl: https://auth.example.com/logout
 
-# Sfondo opzionale (URL di un'immagine). Lascia commentato per lo sfondo di default.
+# Optional background image URL. Leave commented for the default look.
 # backgroundImage: https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920
 # backgroundBlur: 8          # 0-40
-# backgroundOpacity: 0.35    # 0-1, quanto l'immagine è visibile sotto il velo scuro
+# backgroundOpacity: 0.35    # 0-1, how visible the image is under the dark overlay

@@ -14,12 +14,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Homepage",
-  description: "Dashboard dei servizi self-hosted",
+  description: "Self-hosted services dashboard",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="it" className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="relative isolate flex min-h-full flex-col bg-zinc-950">
         <div
           aria-hidden

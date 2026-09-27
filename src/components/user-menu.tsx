@@ -48,13 +48,13 @@ export function UserMenu({
   accountUrl?: string;
   logoutUrl?: string;
 }) {
-  const name = user?.displayName ?? "Ospite";
+  const name = user?.displayName ?? "Guest";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] py-1 pr-3.5 pl-1 text-sm text-white/90 transition outline-none hover:border-white/20 hover:bg-white/[0.08] focus-visible:ring-2 focus-visible:ring-sky-400 data-popup-open:border-white/20 data-popup-open:bg-white/[0.08]"
-        aria-label={`Account di ${name}`}
+        aria-label={`Account for ${name}`}
       >
         <Avatar className="size-8">
           {user?.avatar && <AvatarImage src={user.avatar} alt="" />}
@@ -85,8 +85,8 @@ export function UserMenu({
               <div className="mx-1.5 mb-1.5 flex gap-2 rounded-md bg-amber-500/10 p-2 text-xs text-amber-200">
                 <ShieldAlert className="mt-px size-3.5 shrink-0" />
                 <span>
-                  Utente non presente in <code>users.yaml</code>. Aggiungilo con questo displayName per completare il
-                  profilo.
+                  User not listed in <code>users.yaml</code>. Add them with this displayName to complete
+                  the profile.
                 </span>
               </div>
             )}
@@ -95,31 +95,31 @@ export function UserMenu({
             <DropdownMenuGroup>
               <DropdownMenuLabel>Account</DropdownMenuLabel>
               <Row label="Username" value={user.username} />
-              <Row label="Ruolo" value={user.role} />
-              <Row label="Gruppi" value={user.groups.length ? user.groups.join(", ") : undefined} />
-              <Row label="Accesso" value={user.mock ? "Simulato (sviluppo)" : "Authelia"} />
+              <Row label="Role" value={user.role} />
+              <Row label="Groups" value={user.groups.length ? user.groups.join(", ") : undefined} />
+              <Row label="Signed in via" value={user.mock ? "Simulated (dev)" : "Authelia"} />
             </DropdownMenuGroup>
 
             {(accountUrl || logoutUrl) && <DropdownMenuSeparator />}
             {accountUrl && (
               <DropdownMenuItem render={<a href={accountUrl} target="_blank" rel="noopener noreferrer" />}>
                 <ExternalLink />
-                Gestisci account
+                Manage account
               </DropdownMenuItem>
             )}
             {logoutUrl && (
               <DropdownMenuItem variant="destructive" render={<a href={logoutUrl} />}>
                 <LogOut />
-                Esci
+                Sign out
               </DropdownMenuItem>
             )}
           </>
         ) : (
           <div className="space-y-1.5 px-1.5 py-2 text-sm">
-            <div className="font-medium text-foreground">Non identificato</div>
+            <div className="font-medium text-foreground">Not identified</div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Non sono arrivati gli header di Authelia. Apri la dashboard passando dal reverse proxy nginx per essere
-              riconosciuto.
+              No Authelia headers were received. Open the dashboard through your nginx reverse proxy to be
+              identified.
             </p>
           </div>
         )}

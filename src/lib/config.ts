@@ -70,7 +70,7 @@ export class ConfigError extends Error {
 
 const DEFAULT_SETTINGS: Settings = {
   title: "Homepage",
-  subtitle: "I tuoi servizi, a portata di clic.",
+  subtitle: "Your services, one click away.",
   columns: 4,
   target: "_blank",
   statusCheck: true,

@@ -1,7 +1,7 @@
-# Preferiti / link rapidi, mostrati sopra i servizi.
-# Stesso formato a gruppi di services.yaml.
+# Quick links / bookmarks, shown above the services.
+# Same grouped format as services.yaml.
 
-- Preferiti:
+- Favorites:
     - YouTube:
         href: https://youtube.com
         icon: si-youtube

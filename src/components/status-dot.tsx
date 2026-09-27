@@ -17,7 +17,7 @@ export function StatusDot({ group, index, interval }: { group: number; index: nu
         const data = (await res.json()) as Status;
         if (!cancelled) setStatus(res.ok ? data : { up: false, error: data.error });
       } catch {
-        if (!cancelled) setStatus({ up: false, error: "Dashboard non raggiungibile" });
+        if (!cancelled) setStatus({ up: false, error: "Dashboard unreachable" });
       }
     };
     // Stagger the first check so a full page of services doesn't hammer the network at once.
@@ -32,7 +32,7 @@ export function StatusDot({ group, index, interval }: { group: number; index: nu
 
   const label =
     status === null
-      ? "Verifica in corso…"
+      ? "Checking…"
       : status.up
         ? `Online · ${status.latency} ms${status.status ? ` · HTTP ${status.status}` : ""}`
         : `Offline${status.error ? ` · ${status.error}` : status.status ? ` · HTTP ${status.status}` : ""}`;

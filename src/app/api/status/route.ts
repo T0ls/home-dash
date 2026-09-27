@@ -11,12 +11,12 @@ function probeOnce(url: string, method: "HEAD" | "GET", timeoutMs: number): Prom
     try {
       target = new URL(url);
     } catch {
-      resolve({ up: false, error: "URL non valido" });
+      resolve({ up: false, error: "Invalid URL" });
       return;
     }
     const client = target.protocol === "https:" ? https : target.protocol === "http:" ? http : null;
     if (!client) {
-      resolve({ up: false, error: "Protocollo non supportato" });
+      resolve({ up: false, error: "Unsupported protocol" });
       return;
     }
     const start = performance.now();
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
   const { groups } = await loadDashboard();
   const service = groups[g]?.services[s];
   if (!service?.ping) {
-    return Response.json({ error: "Servizio non trovato o senza controllo di stato" }, { status: 404 });
+    return Response.json({ error: "Service not found or status check disabled" }, { status: 404 });
   }
   return Response.json(await probe(service.ping), { headers: { "cache-control": "no-store" } });
 }
