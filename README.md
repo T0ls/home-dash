@@ -93,7 +93,7 @@ Quick links shown above the services as compact chips.
 
 ### `config/users.yaml`
 
-Users to recognize. There is no login: identity comes from **Authelia**, which passes the user data to the container as HTTP headers through the **nginx** reverse proxy. A user is matched by comparing `displayName` to Authelia's displayname (case-insensitive); otherwise `username` is used.
+Users to recognize. There is no login: identity comes from **Authelia**, which passes the user data to the container as HTTP headers through the **nginx** reverse proxy. A user is matched by Authelia `username` first (case-insensitive), then by `displayName`. Set `username` for every user, especially when several users share the same display name.
 
 ```yaml
 users:

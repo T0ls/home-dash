@@ -105,9 +105,18 @@ export async function getCurrentUser(auth: AuthSettings, users: UserConfig[]): P
     .map((g) => g.trim())
     .filter(Boolean);
 
-  const match =
-    users.find((u) => name && norm(u.displayName) === norm(name)) ??
-    users.find((u) => username && u.username && norm(u.username) === norm(username));
+  // Username is unique in Authelia while display names can repeat, so it wins when both are present.
+  const byUsername = username ? users.find((u) => u.username && norm(u.username) === norm(username)) : undefined;
+  const byName = name
+    ? users.filter((u) => norm(u.displayName) === norm(name) && (!username || !u.username))
+    : [];
+  const match = byUsername ?? (byName.length === 1 ? byName[0] : undefined);
+  if (!byUsername && byName.length > 1) {
+    log.warn(
+      "auth",
+      `"${name}" matches ${byName.length} users in users.yaml and no ${auth.headers.user} header was received to tell them apart`,
+    );
+  }
 
   const who = `"${name ?? ""}"${username ? ` (user: ${username})` : ""}`;
   if (mock) log.info("auth", `${who} simulated via DEV_REMOTE_* env vars`);

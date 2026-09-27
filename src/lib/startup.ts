@@ -36,6 +36,16 @@ export async function logStartup() {
         false,
       );
     }
+    const seen = new Map<string, number>();
+    for (const u of users) {
+      const key = u.displayName.trim().toLowerCase();
+      seen.set(key, (seen.get(key) ?? 0) + 1);
+    }
+    for (const u of users) {
+      if ((seen.get(u.displayName.trim().toLowerCase()) ?? 0) > 1 && !u.username) {
+        log.warn("config", `displayName "${u.displayName}" is used by more than one user; set username: for each of them`, false);
+      }
+    }
     if (settings.auth.enabled) {
       const h = settings.auth.headers;
       log.info("auth", `reading identity from headers ${h.name} / ${h.user} / ${h.email} / ${h.groups}`, false);
