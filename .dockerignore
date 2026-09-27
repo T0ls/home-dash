@@ -6,3 +6,6 @@ Dockerfile
 docker-compose.yml
 terminals
 *.webp
+*.png
+data
+coverage

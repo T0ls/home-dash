@@ -1,14 +1,22 @@
+# syntax=docker/dockerfile:1
+# BuildKit cache mounts keep npm packages and the Next.js compile cache
+# between builds. The final image is unchanged: only standalone output is copied out.
+
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --no-fund
 
 FROM node:22-alpine AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run build
+COPY package.json package-lock.json next.config.ts tsconfig.json postcss.config.mjs ./
+COPY src ./src
+COPY public ./public
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
 FROM node:22-alpine AS runner
 WORKDIR /app
