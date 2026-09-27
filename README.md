@@ -8,6 +8,7 @@ A self-hosted dashboard inspired by [gethomepage/homepage](https://github.com/ge
 - Instant search: press `/` to search, `Enter` opens the first result
 - Config changes apply on refresh — no container restart
 - Users recognized via Authelia (no password in the dashboard), with a welcome message and account menu
+- Personal homes: each user picks their own services from the web UI
 - Designed to run as a Docker container
 
 ## Run with Docker (recommended)
@@ -18,13 +19,30 @@ docker compose up -d --build
 
 The dashboard is available at `http://<server-ip>:3000`.
 
-The `./config` folder is mounted into the container at `/app/config`. If it is empty on first start, the container seeds it with the example files (the folder must be writable by user `1000`; otherwise the bundled examples are used read-only).
+### Data folder
+
+The container keeps everything under one data folder, mounted at `/app/data`:
+
+```
+/srv/homedash/                 ← host folder (e.g. `- /srv/homedash:/app/data`)
+├── config/                    ← general config, edited by the admin
+│   ├── settings.yaml
+│   ├── services.yaml
+│   ├── bookmarks.yaml
+│   └── users.yaml
+└── users/                     ← one folder per user, managed by the app
+    ├── mario/
+    │   └── home.yaml          ← personal home (chosen services/bookmarks)
+    └── giulia/
+```
+
+If `config/` is empty on first start, it is seeded with the example files. User folders are created automatically the first time a user listed in `users.yaml` opens the dashboard. The folder must be writable by user `1000` inside the container (`sudo chown -R 1000:1000 /srv/homedash`).
 
 Without Compose:
 
 ```bash
 docker build -t homepage-dashboard .
-docker run -d --name homepage -p 3000:3000 -v "$(pwd)/config:/app/config" --restart unless-stopped homepage-dashboard
+docker run -d --name homepage -p 3000:3000 -v /srv/homedash:/app/data --restart unless-stopped homepage-dashboard
 ```
 
 ## Configuration
@@ -103,6 +121,12 @@ Header names can be changed under `settings.yaml` → `auth.headers`. If a user 
 
 > **Important:** headers are only trustworthy if the dashboard is reachable **exclusively** through nginx. Do not expose the container port on untrusted networks, or anyone can forge a `Remote-Name` header.
 
+#### Personal home
+
+Each user listed in `users.yaml` can pick which services and bookmarks appear on their own home: user menu → **Customize home**. The choice is saved in `users/<username>/home.yaml` and only affects that user; everyone else keeps the full list. **Reset to default** deletes the file and shows everything again. Services are referenced as `Group/Name`, so renaming a service or group in `services.yaml` removes it from personal homes until it is selected again.
+
+The user folder name is the Authelia username (set `username` in `users.yaml` to keep it stable); if no username is available, a slug of the display name is used.
+
 To try locally without Authelia, start the dev server with `DEV_REMOTE_NAME="Mario Rossi" DEV_REMOTE_USER=mario npm run dev` (ignored in production).
 
 ### `config/settings.yaml`
@@ -135,6 +159,6 @@ npm install
 npm run dev     # http://localhost:43127
 ```
 
-Config is read from `./config` (override with the `CONFIG_DIR` env var).
+In development the data folder is `./data` (git-ignored), seeded from the examples in `./config`. Override with `DATA_DIR`.
 
 Stack: Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui.

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, Search, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ServiceIcon } from "@/components/service-icon";
 import { StatusDot } from "@/components/status-dot";
@@ -50,11 +51,15 @@ export function Dashboard({
   groups,
   bookmarks,
   user,
+  canCustomize = false,
+  customized = false,
 }: {
   settings: Settings;
   groups: ServiceGroup[];
   bookmarks: BookmarkGroup[];
   user: ClientUser | null;
+  canCustomize?: boolean;
+  customized?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,12 +81,12 @@ export function Dashboard({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    let order = 0;
     return groups
-      .map((group, g) => ({
+      .map((group) => ({
         ...group,
-        index: g,
         services: group.services
-          .map((service, s) => ({ ...service, index: s }))
+          .map((service) => ({ ...service, order: order++ }))
           .filter(
             (s) =>
               !q ||
@@ -120,7 +125,12 @@ export function Dashboard({
         <div className="mb-8 flex items-center justify-between gap-4">
           <span className="truncate text-sm font-medium tracking-wide text-white/60">{settings.title}</span>
           {settings.auth.enabled && (
-            <UserMenu user={user} accountUrl={settings.auth.accountUrl} logoutUrl={settings.auth.logoutUrl} />
+            <UserMenu
+              user={user}
+              accountUrl={settings.auth.accountUrl}
+              logoutUrl={settings.auth.logoutUrl}
+              canCustomize={canCustomize}
+            />
           )}
         </div>
 
@@ -202,7 +212,7 @@ export function Dashboard({
         )}
 
         {total === 0 && bookmarkTotal === 0 ? (
-          <EmptyConfig />
+          customized ? <EmptyHome /> : <EmptyConfig />
         ) : filtered.length === 0 && filteredBookmarks.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 py-16 text-center">
             <p className="text-white/70">No results for “{query}”.</p>
@@ -213,9 +223,9 @@ export function Dashboard({
         ) : (
           <div className="space-y-10">
             {filtered.map((group) => (
-              <section key={group.index} aria-labelledby={`group-${group.index}`}>
+              <section key={group.name} aria-labelledby={`group-${group.name}`}>
                 <h2
-                  id={`group-${group.index}`}
+                  id={`group-${group.name}`}
                   className="mb-3 text-xs font-semibold tracking-widest text-white/40 uppercase"
                 >
                   {group.name}
@@ -237,7 +247,7 @@ export function Dashboard({
                           )}
                         </div>
                         {service.ping && (
-                          <StatusDot group={group.index} index={service.index} interval={settings.statusInterval} />
+                          <StatusDot id={service.id} order={service.order} interval={settings.statusInterval} />
                         )}
                       </>
                     );
@@ -245,7 +255,7 @@ export function Dashboard({
                       "group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 backdrop-blur transition";
                     return service.href ? (
                       <a
-                        key={service.index}
+                        key={service.id}
                         href={service.href}
                         target={service.target}
                         rel="noopener noreferrer"
@@ -257,7 +267,7 @@ export function Dashboard({
                         {content}
                       </a>
                     ) : (
-                      <div key={service.index} className={cn(cls, "opacity-70")}>
+                      <div key={service.id} className={cn(cls, "opacity-70")}>
                         {content}
                       </div>
                     );
@@ -269,6 +279,24 @@ export function Dashboard({
         )}
       </main>
     </TooltipProvider>
+  );
+}
+
+function EmptyHome() {
+  return (
+    <div className="rounded-2xl border border-dashed border-white/15 p-8 text-center sm:p-12">
+      <h2 className="text-lg font-medium text-white">Your home is empty</h2>
+      <p className="mx-auto mt-2 max-w-md text-white/60">
+        You haven&apos;t picked any services yet. Choose the ones you use to see them here.
+      </p>
+      <Link
+        href="/customize"
+        className="mt-6 inline-flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-400"
+      >
+        <SlidersHorizontal className="size-4" />
+        Customize home
+      </Link>
+    </div>
   );
 }
 

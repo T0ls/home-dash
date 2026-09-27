@@ -43,3 +43,6 @@ next-env.d.ts
 # local test screenshots
 *.webp
 dashboard-desktop-view.webp
+
+# local runtime data (general config copy + per-user folders)
+/data

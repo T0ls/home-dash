@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { Dashboard } from "@/components/dashboard";
 import { ConfigError, loadDashboard } from "@/lib/config";
 import { getCurrentUser } from "@/lib/users";
+import { applyUserHome, ensureUserDir, readUserHome } from "@/lib/user-home";
 
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
@@ -19,6 +20,14 @@ export default async function Page() {
   const result = await loadDashboard().catch((err: Error) => err);
   if (!(result instanceof Error)) {
     const user = await getCurrentUser(result.settings.auth, result.users);
+    let { groups, bookmarks } = result;
+    let customized = false;
+    if (user?.slug) {
+      await ensureUserDir(user.slug).catch(() => {});
+      const home = await readUserHome(user.slug);
+      customized = home.services !== undefined || home.bookmarks !== undefined;
+      ({ groups, bookmarks } = applyUserHome(groups, bookmarks, home));
+    }
     return (
       <>
         {result.settings.backgroundImage && (
@@ -33,7 +42,14 @@ export default async function Page() {
             }}
           />
         )}
-        <Dashboard settings={result.settings} groups={result.groups} bookmarks={result.bookmarks} user={user} />
+        <Dashboard
+          settings={result.settings}
+          groups={groups}
+          bookmarks={bookmarks}
+          user={user}
+          canCustomize={Boolean(user?.slug)}
+          customized={customized}
+        />
       </>
     );
   }

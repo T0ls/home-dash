@@ -16,18 +16,18 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
     HOSTNAME=0.0.0.0 \
-    CONFIG_DIR=/app/config \
+    DATA_DIR=/app/data \
     DEFAULTS_DIR=/app/defaults
 
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --chown=node:node config ./defaults
-RUN mkdir -p /app/config && chown node:node /app/config
+RUN mkdir -p /app/data && chown node:node /app/data
 
 USER node
 EXPOSE 3000
-VOLUME /app/config
+VOLUME /app/data
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

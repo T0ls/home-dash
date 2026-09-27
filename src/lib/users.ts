@@ -21,6 +21,8 @@ export type CurrentUser = {
   known: boolean;
   /** true when the identity comes from DEV_REMOTE_* env vars instead of real headers */
   mock: boolean;
+  /** folder name under users/, only for users listed in users.yaml */
+  slug?: string;
 };
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -52,6 +54,17 @@ function decodeHeader(value: string | null): string | undefined {
   if (!/[\u0080-\u00ff]/.test(trimmed)) return trimmed;
   const decoded = Buffer.from(trimmed, "latin1").toString("utf8");
   return decoded.includes("\ufffd") ? trimmed : decoded;
+}
+
+/** Folder name for a user: Authelia username when available, otherwise a slug of the display name. */
+export function userSlug(user: { username?: string; displayName: string }) {
+  const base = (user.username ?? user.displayName)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^[-.]+|[-.]+$/g, "");
+  return base || "user";
 }
 
 const norm = (s?: string) => s?.normalize("NFC").trim().toLowerCase();
@@ -86,6 +99,7 @@ export async function getCurrentUser(auth: AuthSettings, users: UserConfig[]): P
     users.find((u) => username && u.username && norm(u.username) === norm(username));
 
   return {
+    slug: match ? userSlug({ username: match.username ?? username, displayName: match.displayName }) : undefined,
     displayName: match?.displayName ?? name ?? username!,
     username: username ?? match?.username,
     email: email ?? match?.email,

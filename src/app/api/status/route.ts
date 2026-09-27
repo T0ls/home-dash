@@ -61,11 +61,9 @@ async function probe(url: string, timeoutMs = 8000): Promise<StatusResult> {
 }
 
 export async function GET(request: Request) {
-  const params = new URL(request.url).searchParams;
-  const g = Number(params.get("g"));
-  const s = Number(params.get("s"));
+  const id = new URL(request.url).searchParams.get("id");
   const { groups } = await loadDashboard();
-  const service = groups[g]?.services[s];
+  const service = groups.flatMap((g) => g.services).find((s) => s.id === id);
   if (!service?.ping) {
     return Response.json({ error: "Service not found or status check disabled" }, { status: 404 });
   }

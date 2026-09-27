@@ -7,6 +7,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # Holds settings.yaml, services.yaml, bookmarks.yaml and users.yaml.
-      # If empty on first start, it is seeded with the example files.
-      - ./config:/app/config
+      # Data root. Inside it the app uses:
+      #   config/          general config (settings, services, bookmarks, users)
+      #   users/<name>/    one folder per user with their personal files
+      # An empty folder is seeded with the example config on first start.
+      # e.g. - /srv/homedash:/app/data
+      - ./data:/app/data

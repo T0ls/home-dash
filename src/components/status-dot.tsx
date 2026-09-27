@@ -6,14 +6,14 @@ import { cn } from "@/lib/utils";
 
 type Status = { up: boolean; status?: number; latency?: number; error?: string };
 
-export function StatusDot({ group, index, interval }: { group: number; index: number; interval: number }) {
+export function StatusDot({ id, order, interval }: { id: string; order: number; interval: number }) {
   const [status, setStatus] = useState<Status | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     const check = async () => {
       try {
-        const res = await fetch(`/api/status?g=${group}&s=${index}`, { cache: "no-store" });
+        const res = await fetch(`/api/status?id=${encodeURIComponent(id)}`, { cache: "no-store" });
         const data = (await res.json()) as Status;
         if (!cancelled) setStatus(res.ok ? data : { up: false, error: data.error });
       } catch {
@@ -21,14 +21,14 @@ export function StatusDot({ group, index, interval }: { group: number; index: nu
       }
     };
     // Stagger the first check so a full page of services doesn't hammer the network at once.
-    const delay = setTimeout(check, (group * 3 + index) * 120);
-    const id = setInterval(check, interval * 1000);
+    const delay = setTimeout(check, order * 120);
+    const timer = setInterval(check, interval * 1000);
     return () => {
       cancelled = true;
       clearTimeout(delay);
-      clearInterval(id);
+      clearInterval(timer);
     };
-  }, [group, index, interval]);
+  }, [id, order, interval]);
 
   const label =
     status === null

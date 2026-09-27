@@ -5,6 +5,8 @@ import YAML from "yaml";
 import { parseUsers, type UserConfig } from "@/lib/users";
 
 export type Service = {
+  /** "Group/Name", stable across requests; used for status checks and per-user selections */
+  id: string;
   name: string;
   href?: string;
   description?: string;
@@ -19,6 +21,7 @@ export type ServiceGroup = {
 };
 
 export type Bookmark = {
+  id: string;
   name: string;
   href: string;
   icon?: string;
@@ -84,31 +87,39 @@ const DEFAULT_SETTINGS: Settings = {
   },
 };
 
+export function dataDir() {
+  return path.resolve(/*turbopackIgnore: true*/ process.env.DATA_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "data"));
+}
+
 export function configDir() {
-  return path.resolve(process.env.CONFIG_DIR ?? path.join(process.cwd(), "config"));
+  return path.resolve(/*turbopackIgnore: true*/ process.env.CONFIG_DIR ?? path.join(/*turbopackIgnore: true*/ dataDir(), "config"));
+}
+
+export function usersDir() {
+  return path.join(dataDir(), "users");
 }
 
 function defaultsDir() {
-  return path.resolve(process.env.DEFAULTS_DIR ?? path.join(process.cwd(), "config"));
+  return path.resolve(/*turbopackIgnore: true*/ process.env.DEFAULTS_DIR ?? path.join(/*turbopackIgnore: true*/ process.cwd(), "config"));
 }
 
 async function readYaml(file: string): Promise<unknown> {
   const full = path.join(configDir(), file);
   let raw: string;
   try {
-    raw = await fs.readFile(full, "utf8");
+    raw = await fs.readFile(/*turbopackIgnore: true*/ full, "utf8");
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     // First start with an empty mounted volume: seed it with the bundled examples.
-    const fallback = path.join(defaultsDir(), file);
+    const fallback = path.join(/*turbopackIgnore: true*/ defaultsDir(), file);
     if (fallback === full) return null;
     try {
-      raw = await fs.readFile(fallback, "utf8");
+      raw = await fs.readFile(/*turbopackIgnore: true*/ fallback, "utf8");
     } catch {
       return null;
     }
-    await fs.mkdir(configDir(), { recursive: true }).catch(() => {});
-    await fs.writeFile(full, raw).catch(() => {});
+    await fs.mkdir(/*turbopackIgnore: true*/ configDir(), { recursive: true }).catch(() => {});
+    await fs.writeFile(/*turbopackIgnore: true*/ full, raw).catch(() => {});
   }
   try {
     return YAML.parse(raw);
@@ -183,6 +194,7 @@ function parseServices(raw: unknown, settings: Settings): ServiceGroup[] {
           ? undefined
           : (str(v.ping) ?? (settings.statusCheck || v.ping === true ? href : undefined));
       return {
+        id: `${groupName}/${name}`,
         name,
         href,
         description: str(v.description),
@@ -204,6 +216,7 @@ function parseBookmarks(raw: unknown, settings: Settings): BookmarkGroup[] {
           const href = str(v.href);
           if (!href) return null;
           return {
+            id: `${groupName}/${name}`,
             name,
             href,
             icon: str(v.icon),

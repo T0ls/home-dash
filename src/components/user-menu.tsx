@@ -1,6 +1,7 @@
 "use client";
 
-import { ExternalLink, LogOut, ShieldAlert, UserRound } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, LogOut, ShieldAlert, SlidersHorizontal, UserRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -43,10 +44,12 @@ export function UserMenu({
   user,
   accountUrl,
   logoutUrl,
+  canCustomize = false,
 }: {
   user: ClientUser | null;
   accountUrl?: string;
   logoutUrl?: string;
+  canCustomize?: boolean;
 }) {
   const name = user?.displayName ?? "Guest";
 
@@ -100,6 +103,15 @@ export function UserMenu({
               <Row label="Signed in via" value={user.mock ? "Simulated (dev)" : "Authelia"} />
             </DropdownMenuGroup>
 
+            {canCustomize && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem render={<Link href="/customize" />}>
+                  <SlidersHorizontal />
+                  Customize home
+                </DropdownMenuItem>
+              </>
+            )}
             {(accountUrl || logoutUrl) && <DropdownMenuSeparator />}
             {accountUrl && (
               <DropdownMenuItem render={<a href={accountUrl} target="_blank" rel="noopener noreferrer" />}>
