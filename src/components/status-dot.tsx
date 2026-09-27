@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-type Status = { up: boolean; status?: number; latency?: number; error?: string };
+type Status = { up: boolean; authPortal?: boolean; status?: number; latency?: number; error?: string };
 
 export function StatusDot({ id, order, interval }: { id: string; order: number; interval: number }) {
   const [status, setStatus] = useState<Status | null>(null);
@@ -33,9 +33,11 @@ export function StatusDot({ id, order, interval }: { id: string; order: number; 
   const label =
     status === null
       ? "Checking…"
-      : status.up
-        ? `Online · ${status.latency} ms${status.status ? ` · HTTP ${status.status}` : ""}`
-        : `Offline${status.error ? ` · ${status.error}` : status.status ? ` · HTTP ${status.status}` : ""}`;
+      : status.authPortal
+        ? `Authelia portal · service not checked${status.status ? ` · HTTP ${status.status}` : ""}`
+        : status.up
+          ? `Online · ${status.latency} ms${status.status ? ` · HTTP ${status.status}` : ""}`
+          : `Offline${status.error ? ` · ${status.error}` : status.status ? ` · HTTP ${status.status}` : ""}`;
 
   return (
     <Tooltip>
@@ -52,8 +54,9 @@ export function StatusDot({ id, order, interval }: { id: string; order: number; 
           className={cn(
             "relative inline-flex size-2.5 rounded-full",
             status === null && "animate-pulse bg-zinc-500",
+            status?.authPortal && "bg-amber-400",
             status?.up === true && "bg-emerald-400",
-            status?.up === false && "bg-rose-500",
+            status?.up === false && !status.authPortal && "bg-rose-500",
           )}
         />
       </TooltipTrigger>

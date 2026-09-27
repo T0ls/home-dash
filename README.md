@@ -82,7 +82,7 @@ Omit both `users` and `groups` to show the service to everyone. A user whose `ro
 | `users`       | Optional list of Authelia usernames/displayNames allowed to see this service                         |
 | `groups`      | Optional list of Authelia groups allowed to see this service                                         |
 
-The status check runs **from the server** (the container), so use addresses the container can reach. Any HTTP response under 500 (including 401/403) counts as "online"; self-signed certificates are accepted.
+The status check runs **from the server** (the container), so use addresses the container can reach. It works the same when you open the dashboard from outside your home: your browser only asks homedash, and the container probes `ping` (or `href`) on the LAN. A response whose body is the Authelia portal (including HTTP 200 on a hostname that does not exist) is not counted as online. Any other HTTP response under 500 counts as online; self-signed certificates are accepted. Set `ping` to an internal URL when the public address is behind Authelia.
 
 ### `config/bookmarks.yaml`
 

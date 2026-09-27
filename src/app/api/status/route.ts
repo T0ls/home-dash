@@ -1,11 +1,26 @@
 import http from "node:http";
 import https from "node:https";
+import zlib from "node:zlib";
 import { loadDashboard } from "@/lib/config";
 
-export type StatusResult = { up: boolean; status?: number; latency?: number; error?: string };
+export type StatusResult = {
+  up: boolean;
+  /** True when the reply is Authelia's portal, not the application. */
+  authPortal?: boolean;
+  status?: number;
+  latency?: number;
+  error?: string;
+};
 
-// Uses node:http directly so self-signed certificates (common on homelabs) don't count as "down".
-function probeOnce(url: string, method: "HEAD" | "GET", timeoutMs: number): Promise<StatusResult> {
+const BODY_LIMIT = 8192;
+
+function isAutheliaPortal(body: string) {
+  return /SPDX-FileCopyrightText:[^\n]{0,40}Authelia/i.test(body);
+}
+
+// GET (not HEAD): Authelia's deny portal answers 200 with an HTML page, so the
+// status code alone cannot tell a missing host from a live service.
+function probe(url: string, timeoutMs = 8000): Promise<StatusResult> {
   return new Promise((resolve) => {
     let target: URL;
     try {
@@ -19,45 +34,68 @@ function probeOnce(url: string, method: "HEAD" | "GET", timeoutMs: number): Prom
       resolve({ up: false, error: "Unsupported protocol" });
       return;
     }
+
     const start = performance.now();
+    let settled = false;
+    const done = (result: StatusResult) => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+
     const req = client.request(
       target,
       {
-        method,
+        method: "GET",
         timeout: timeoutMs,
         rejectUnauthorized: false,
         headers: {
-          "user-agent":
-            "Mozilla/5.0 (compatible; HomepageStatus/1.0; +https://github.com/gethomepage/homepage)",
+          "user-agent": "Mozilla/5.0 (compatible; HomepageStatus/1.0)",
           accept: "*/*",
         },
       },
       (res) => {
-        res.resume();
         const status = res.statusCode ?? 0;
-        // Some hosts reject HEAD; treat that as inconclusive so the caller can retry with GET.
-        if (method === "HEAD" && (status === 405 || status === 501 || status === 403)) {
-          resolve({ up: false, status, error: "retry" });
-          return;
-        }
-        resolve({
-          up: status > 0 && status < 500,
-          status,
-          latency: Math.round(performance.now() - start),
+        const chunks: Buffer[] = [];
+        let received = 0;
+        const encoding = String(res.headers["content-encoding"] ?? "");
+
+        const finish = () => {
+          if (settled) return;
+          const latency = Math.round(performance.now() - start);
+          let body = Buffer.concat(chunks);
+          try {
+            if (encoding.includes("gzip")) body = zlib.gunzipSync(body);
+            else if (encoding.includes("deflate")) body = zlib.inflateSync(body);
+          } catch {
+            // Keep the raw bytes; the portal check will simply miss.
+          }
+          const text = body.toString("utf8");
+          if (isAutheliaPortal(text)) {
+            done({ up: false, authPortal: true, status, latency });
+          } else {
+            done({
+              up: status > 0 && status < 500,
+              status,
+              latency,
+            });
+          }
+          res.destroy();
+        };
+
+        res.on("data", (chunk: Buffer) => {
+          if (received < BODY_LIMIT) chunks.push(chunk);
+          received += chunk.length;
+          if (received >= BODY_LIMIT && !encoding.includes("gzip") && !encoding.includes("deflate")) finish();
         });
-        req.destroy();
+        res.on("end", finish);
+        res.on("error", (err) => done({ up: false, error: err.message }));
       },
     );
     req.on("timeout", () => req.destroy(new Error("Timeout")));
-    req.on("error", (err) => resolve({ up: false, error: err.message }));
+    req.on("error", (err) => done({ up: false, error: err.message }));
     req.end();
   });
-}
-
-async function probe(url: string, timeoutMs = 8000): Promise<StatusResult> {
-  const head = await probeOnce(url, "HEAD", timeoutMs);
-  if (head.up || (head.error && head.error !== "retry")) return head;
-  return probeOnce(url, "GET", timeoutMs);
 }
 
 export async function GET(request: Request) {
