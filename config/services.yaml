@@ -5,6 +5,7 @@
 #   description: short description
 #   icon:        - name from https://dashboard-icons.homarr.dev (e.g. jellyfin, proxmox)
 #                - "si-<name>" for Simple Icons (e.g. si-github)
+#                - a file in the icons/ folder of the data volume (e.g. mio-logo.png)
 #                - an image URL (https://...)
 #                - an emoji (e.g. 🎬)
 #   ping:        alternate URL for the status check (e.g. an internal address),

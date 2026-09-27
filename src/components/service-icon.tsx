@@ -1,19 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { iconImageSrc, isEmojiIcon } from "@/lib/icon-src";
 import { cn } from "@/lib/utils";
-
-const EMOJI = /\p{Extended_Pictographic}/u;
-
-function resolve(icon: string): string | null {
-  if (/^(https?:)?\/\//.test(icon) || icon.startsWith("/")) return icon;
-  if (icon.startsWith("si-")) {
-    // jsDelivr serves Simple Icons with CORS; cdn.simpleicons.org is often blocked by CORP.
-    return `https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/${icon.slice(3)}.svg`;
-  }
-  const name = icon.replace(/\.(png|svg|webp)$/, "");
-  return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/${name}.svg`;
-}
 
 function initials(name: string) {
   const parts = name.split(/[\s\-_.]+/).filter(Boolean);
@@ -21,18 +10,18 @@ function initials(name: string) {
 }
 
 export function ServiceIcon({ icon, name, className }: { icon?: string; name: string; className?: string }) {
-  const [failed, setFailed] = useState(false);
+  const src = icon ? iconImageSrc(icon) : null;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const base = cn(
     "flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/5 ring-1 ring-white/10",
     className,
   );
 
-  if (icon && EMOJI.test(icon) && !/^[\w-]+$/.test(icon)) {
+  if (icon && isEmojiIcon(icon)) {
     return <div className={cn(base, "text-2xl")}>{icon}</div>;
   }
 
-  const src = icon ? resolve(icon) : null;
-  if (!src || failed) {
+  if (!src || failedSrc === src) {
     return <div className={cn(base, "text-sm font-semibold text-white/70")}>{initials(name)}</div>;
   }
 
@@ -44,7 +33,7 @@ export function ServiceIcon({ icon, name, className }: { icon?: string; name: st
         alt=""
         className={cn("size-[65%] object-contain", icon?.startsWith("si-") && "brightness-0 invert")}
         loading="lazy"
-        onError={() => setFailed(true)}
+        onError={() => setFailedSrc(src)}
       />
     </div>
   );

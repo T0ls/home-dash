@@ -10,6 +10,12 @@ columns: 4
 # How to open links: _blank (new tab) or _self (same tab).
 target: _blank
 
+# Download Dashboard Icons and Simple Icons into the data folder the first time
+# they are shown, then serve that copy. The dashboard can then show those icons
+# with no internet. Your own files in the icons/ folder (next to config/) are
+# always served locally, whether this is on or off.
+cacheIcons: false
+
 # Check whether services are reachable (green/red status dot).
 statusCheck: true
 # How often to re-check, in seconds.

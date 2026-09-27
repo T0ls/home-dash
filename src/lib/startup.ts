@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import { configDir, dataDir, loadDashboard, usersDir } from "@/lib/config";
+import { iconCacheDir, iconsDir } from "@/lib/icons";
 import { log } from "@/lib/log";
 
 async function writable(dir: string) {
@@ -23,6 +24,9 @@ export async function logStartup() {
   if (!(await writable(usersDir()))) {
     log.warn("startup", `${usersDir()} is not writable, personal homes can't be saved; ${fix}`, false);
   }
+  if (!(await writable(iconsDir()))) {
+    log.warn("startup", `${iconsDir()} is not writable, custom icon files can't be added; ${fix}`, false);
+  }
 
   try {
     const { settings, groups, bookmarks, users } = await loadDashboard();
@@ -45,6 +49,15 @@ export async function logStartup() {
       if ((seen.get(u.displayName.trim().toLowerCase()) ?? 0) > 1 && !u.username) {
         log.warn("config", `displayName "${u.displayName}" is used by more than one user; set username: for each of them`, false);
       }
+    }
+    if (settings.cacheIcons) {
+      if (await writable(iconCacheDir())) {
+        log.info("config", `CDN icon cache on, files in ${iconCacheDir()}`, false);
+      } else {
+        log.warn("config", `cacheIcons is on but ${iconCacheDir()} is not writable; ${fix}`, false);
+      }
+    } else {
+      log.info("config", `CDN icon cache off; custom icons still load from ${iconsDir()}`, false);
     }
     if (settings.auth.enabled) {
       const h = settings.auth.headers;

@@ -55,6 +55,8 @@ export type Settings = {
   statusCheck: boolean;
   statusInterval: number;
   showClock: boolean;
+  /** Download Dashboard Icons / Simple Icons into the data folder and serve them from there. */
+  cacheIcons: boolean;
   backgroundImage?: string;
   backgroundBlur: number;
   backgroundOpacity: number;
@@ -86,6 +88,7 @@ const DEFAULT_SETTINGS: Settings = {
   statusCheck: true,
   statusInterval: 60,
   showClock: true,
+  cacheIcons: false,
   backgroundBlur: 0,
   backgroundOpacity: 0.35,
   auth: {
@@ -192,6 +195,7 @@ function parseSettings(raw: unknown): Settings {
     statusCheck: raw.statusCheck === undefined ? DEFAULT_SETTINGS.statusCheck : Boolean(raw.statusCheck),
     statusInterval: Number.isFinite(interval) && interval >= 5 ? interval : DEFAULT_SETTINGS.statusInterval,
     showClock: raw.showClock === undefined ? DEFAULT_SETTINGS.showClock : Boolean(raw.showClock),
+    cacheIcons: raw.cacheIcons === true,
     backgroundImage: str(raw.backgroundImage),
     backgroundBlur: Number.isFinite(blur) ? clamp(blur, 0, 40) : DEFAULT_SETTINGS.backgroundBlur,
     backgroundOpacity: Number.isFinite(opacity) ? clamp(opacity, 0, 1) : DEFAULT_SETTINGS.backgroundOpacity,
@@ -248,8 +252,12 @@ function parseBookmarks(raw: unknown, settings: Settings): BookmarkGroup[] {
     .filter((g) => g.bookmarks.length > 0);
 }
 
+export async function loadSettings(): Promise<Settings> {
+  return parseSettings(await readYaml("settings.yaml"));
+}
+
 export async function loadDashboard(): Promise<Dashboard> {
-  const settings = parseSettings(await readYaml("settings.yaml"));
+  const settings = await loadSettings();
   const [servicesRaw, bookmarksRaw, usersRaw] = await Promise.all([
     readYaml("services.yaml"),
     readYaml("bookmarks.yaml"),

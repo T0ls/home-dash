@@ -3,7 +3,7 @@
 A self-hosted dashboard inspired by [gethomepage/homepage](https://github.com/gethomepage/homepage), so you can open all your services (Jellyfin, Proxmox, Nextcloud, …) from one page without remembering every URL and port.
 
 - Services organized in groups, defined in a simple YAML file
-- Automatic icons from [Dashboard Icons](https://dashboard-icons.homarr.dev) and [Simple Icons](https://simpleicons.org), or a URL / emoji
+- Automatic icons from [Dashboard Icons](https://dashboard-icons.homarr.dev) and [Simple Icons](https://simpleicons.org), your own files, a URL, or an emoji
 - Online/offline status indicator per service (with latency)
 - Instant search: press `/` to search, `Enter` opens the first result
 - Config changes apply on refresh — no container restart
@@ -31,6 +31,8 @@ The container keeps everything under one data folder, mounted at `/app/data`:
 │   ├── services.yaml
 │   ├── bookmarks.yaml
 │   └── users.yaml
+├── icons/                     ← your own images (icon: mio-logo.png)
+├── cache/icons/               ← CDN copies, only when cacheIcons is true
 └── users/                     ← one folder per user, managed by the app
     ├── mario/
     │   └── home.yaml          ← personal home (chosen services/bookmarks)
@@ -76,11 +78,15 @@ Omit both `users` and `groups` to show the service to everyone. A user whose `ro
 | ------------- | ---------------------------------------------------------------------------------------------------- |
 | `href`        | Service link                                                                                         |
 | `description` | Short text under the name                                                                            |
-| `icon`        | Dashboard Icons name (`jellyfin`), `si-<name>` for Simple Icons, an image URL, or an emoji           |
+| `icon`        | Dashboard Icons name (`jellyfin`), `si-<name>` for Simple Icons, a file in `icons/` (`mio-logo.png`), an image URL, or an emoji |
 | `ping`        | Alternate URL for the status check, or `false` to disable it                                         |
 | `target`      | `_blank` or `_self`, overrides the global setting                                                    |
 | `users`       | Optional list of Authelia usernames/displayNames allowed to see this service                         |
 | `groups`      | Optional list of Authelia groups allowed to see this service                                         |
+
+Put your own images in the `icons/` folder of the data volume (`/srv/homedash/icons/mio-logo.png` when the volume is mounted at `/app/data`) and reference the file name, including the extension: `icon: mio-logo.png`. png, svg, webp, jpg, gif, ico, and avif work. A catalog name such as `jellyfin` still comes from the CDN, unless a file with that name (for example `icons/jellyfin.svg`) is present — that file wins.
+
+Set `cacheIcons: true` in `settings.yaml` to download Dashboard Icons and Simple Icons the first time they are shown and keep the copy under `cache/icons/`. After that the browser loads them from homedash, so those icons still appear when the server has no internet. Leave it `false` to load catalog icons from the CDN without saving them. Image URLs (`https://…`) are always loaded by the browser and are not saved.
 
 The status check runs **from the server** (the container), so use addresses the container can reach. It works the same when you open the dashboard from outside your home: your browser only asks homedash, and the container probes `ping` (or `href`) on the LAN. A response whose body is the Authelia portal (including HTTP 200 on a hostname that does not exist) is not counted as online. Any other HTTP response under 500 counts as online; self-signed certificates are accepted. Set `ping` to an internal URL when the public address is behind Authelia. **Check status**, next to the search box, probes every visible service immediately instead of waiting for the next interval.
 
@@ -150,6 +156,7 @@ To try locally without Authelia, start the dev server with `DEV_REMOTE_NAME="Mar
 | `statusCheck`        | `true`                               | Enable status checks for everyone            |
 | `statusInterval`     | `60`                                 | Status check interval in seconds (min. 5)    |
 | `showClock`          | `true`                               | Show clock and date                          |
+| `cacheIcons`         | `false`                              | Save CDN icons into `cache/icons/` and serve that copy |
 | `backgroundImage`    | —                                    | Background image URL                         |
 | `backgroundBlur`     | `0`                                  | Background blur in px (0-40)                 |
 | `backgroundOpacity`  | `0.35`                               | Background visibility (0-1)                  |
