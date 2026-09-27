@@ -33,7 +33,13 @@ export default async function Page() {
       const home = await readUserHome(user.slug);
       const serviceIds = groups.flatMap((g) => g.services.map((s) => s.id));
       const bookmarkIds = bookmarks.flatMap((g) => g.bookmarks.map((b) => b.id));
-      const resolved = resolveHome(home, serviceIds, bookmarkIds);
+      const resolved = resolveHome(
+        home,
+        serviceIds,
+        bookmarkIds,
+        groups.map((g) => ({ name: g.name, ids: g.services.map((s) => s.id) })),
+        bookmarks.map((g) => ({ name: g.name, ids: g.bookmarks.map((b) => b.id) })),
+      );
       customized = resolved.customized;
       ({ groups, bookmarks } = applyUserHome(groups, bookmarks, resolved));
     }

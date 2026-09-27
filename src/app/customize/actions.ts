@@ -39,6 +39,9 @@ export async function saveHome(selection: {
   /** Full drag order (visible + hidden) when the form saved */
   orderServices?: string[];
   orderBookmarks?: string[];
+  /** Section order (group names) */
+  orderGroups?: string[];
+  orderBookmarkGroups?: string[];
   /** All ids the user was allowed to see when the form loaded (used to compute hidden) */
   availableServices: string[];
   availableBookmarks: string[];
@@ -50,6 +53,8 @@ export async function saveHome(selection: {
     const allowed = filterByAccess(dashboard.groups, dashboard.bookmarks, user);
     const allowedServices = new Set(allowed.groups.flatMap((g) => g.services.map((s) => s.id)));
     const allowedBookmarks = new Set(allowed.bookmarks.flatMap((g) => g.bookmarks.map((b) => b.id)));
+    const allowedGroups = allowed.groups.map((g) => g.name);
+    const allowedBookmarkGroups = allowed.bookmarks.map((g) => g.name);
 
     // Only trust ids the user is allowed to see.
     const availableServices = selection.availableServices.filter((id) => allowedServices.has(id));
@@ -66,6 +71,8 @@ export async function saveHome(selection: {
       hiddenBookmarks: availableBookmarks.filter((id) => !shownB.has(id)),
       orderServices: mergeOrder(selection.orderServices, availableServices, shownServices),
       orderBookmarks: mergeOrder(selection.orderBookmarks, availableBookmarks, shownBookmarks),
+      orderGroups: mergeOrder(selection.orderGroups, allowedGroups, allowedGroups),
+      orderBookmarkGroups: mergeOrder(selection.orderBookmarkGroups, allowedBookmarkGroups, allowedBookmarkGroups),
     });
     revalidatePath("/");
     revalidatePath("/customize");

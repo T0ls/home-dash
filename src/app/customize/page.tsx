@@ -17,7 +17,13 @@ export default async function CustomizePage() {
   const serviceIds = allowed.groups.flatMap((g) => g.services.map((s) => s.id));
   const bookmarkIds = allowed.bookmarks.flatMap((g) => g.bookmarks.map((b) => b.id));
   const resolved = user?.slug
-    ? resolveHome(await readUserHome(user.slug), serviceIds, bookmarkIds)
+    ? resolveHome(
+        await readUserHome(user.slug),
+        serviceIds,
+        bookmarkIds,
+        allowed.groups.map((g) => ({ name: g.name, ids: g.services.map((s) => s.id) })),
+        allowed.bookmarks.map((g) => ({ name: g.name, ids: g.bookmarks.map((b) => b.id) })),
+      )
     : null;
 
   return (
@@ -44,8 +50,8 @@ export default async function CustomizePage() {
           <header className="mb-8">
             <h1 className="text-3xl font-semibold tracking-tight text-white">Customize your home</h1>
             <p className="mt-1.5 text-white/50">
-              Pick and rearrange the services and bookmarks you want to see. Only you will see these changes.
-              New services added by the admin appear here automatically.
+              Pick and rearrange the services and bookmarks you want to see. Drag a section to move the whole group.
+              Only you will see these changes. New services added by the admin appear here automatically.
             </p>
           </header>
           <CustomizeForm
@@ -54,6 +60,8 @@ export default async function CustomizePage() {
             initial={{
               orderServices: resolved!.orderServices,
               orderBookmarks: resolved!.orderBookmarks,
+              orderGroups: resolved!.orderGroups,
+              orderBookmarkGroups: resolved!.orderBookmarkGroups,
               selectedServices: resolved!.orderServices.filter((id) => !resolved!.hiddenServices.includes(id)),
               selectedBookmarks: resolved!.orderBookmarks.filter((id) => !resolved!.hiddenBookmarks.includes(id)),
               customized: resolved!.customized,
