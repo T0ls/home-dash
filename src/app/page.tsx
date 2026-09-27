@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Dashboard } from "@/components/dashboard";
 import { ConfigError, loadDashboard } from "@/lib/config";
+import { getCurrentUser } from "@/lib/users";
 
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
@@ -17,6 +18,7 @@ export default async function Page() {
   await connection();
   const result = await loadDashboard().catch((err: Error) => err);
   if (!(result instanceof Error)) {
+    const user = await getCurrentUser(result.settings.auth, result.users);
     return (
       <>
         {result.settings.backgroundImage && (
@@ -31,7 +33,7 @@ export default async function Page() {
             }}
           />
         )}
-        <Dashboard settings={result.settings} groups={result.groups} bookmarks={result.bookmarks} />
+        <Dashboard settings={result.settings} groups={result.groups} bookmarks={result.bookmarks} user={user} />
       </>
     );
   }

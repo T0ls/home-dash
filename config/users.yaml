@@ -1,0 +1,23 @@
+# Utenti della dashboard.
+#
+# Non c'è login: l'identità arriva da Authelia tramite gli header che nginx
+# inoltra al container (vedi la sezione "auth" in settings.yaml).
+# Un utente viene riconosciuto confrontando `displayName` con il displayname
+# configurato in Authelia (senza distinzione maiuscole/minuscole).
+# Se non corrisponde, si prova con `username`.
+#
+# Campi:
+#   displayName: obbligatorio, uguale al displayname di Authelia
+#   username:    opzionale, username di Authelia
+#   email:       opzionale, usata se Authelia non la invia
+#   avatar:      opzionale, URL di un'immagine profilo
+#   role:        opzionale, etichetta mostrata nel profilo (es. Admin)
+
+users:
+  - displayName: Mario Rossi
+    username: mario
+    email: mario@example.com
+    role: Admin
+  - displayName: Giulia Bianchi
+    username: giulia
+    role: Famiglia

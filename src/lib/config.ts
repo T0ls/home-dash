@@ -2,6 +2,7 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
+import { parseUsers, type UserConfig } from "@/lib/users";
 
 export type Service = {
   name: string;
@@ -29,6 +30,13 @@ export type BookmarkGroup = {
   bookmarks: Bookmark[];
 };
 
+export type AuthSettings = {
+  enabled: boolean;
+  headers: { user: string; name: string; email: string; groups: string };
+  logoutUrl?: string;
+  accountUrl?: string;
+};
+
 export type Settings = {
   title: string;
   subtitle?: string;
@@ -40,12 +48,14 @@ export type Settings = {
   backgroundImage?: string;
   backgroundBlur: number;
   backgroundOpacity: number;
+  auth: AuthSettings;
 };
 
 export type Dashboard = {
   settings: Settings;
   groups: ServiceGroup[];
   bookmarks: BookmarkGroup[];
+  users: UserConfig[];
   configDir: string;
 };
 
@@ -68,6 +78,10 @@ const DEFAULT_SETTINGS: Settings = {
   showClock: true,
   backgroundBlur: 0,
   backgroundOpacity: 0.35,
+  auth: {
+    enabled: true,
+    headers: { user: "remote-user", name: "remote-name", email: "remote-email", groups: "remote-groups" },
+  },
 };
 
 export function configDir() {
@@ -119,6 +133,24 @@ function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
 
+function parseAuth(raw: unknown): AuthSettings {
+  const d = DEFAULT_SETTINGS.auth;
+  if (!isRecord(raw)) return d;
+  const h = isRecord(raw.headers) ? raw.headers : {};
+  const header = (v: unknown, fallback: string) => (str(v) ?? fallback).toLowerCase();
+  return {
+    enabled: raw.enabled === undefined ? d.enabled : Boolean(raw.enabled),
+    headers: {
+      user: header(h.user, d.headers.user),
+      name: header(h.name, d.headers.name),
+      email: header(h.email, d.headers.email),
+      groups: header(h.groups, d.headers.groups),
+    },
+    logoutUrl: str(raw.logoutUrl),
+    accountUrl: str(raw.accountUrl),
+  };
+}
+
 function parseSettings(raw: unknown): Settings {
   if (!isRecord(raw)) return DEFAULT_SETTINGS;
   const columns = Number(raw.columns);
@@ -136,6 +168,7 @@ function parseSettings(raw: unknown): Settings {
     backgroundImage: str(raw.backgroundImage),
     backgroundBlur: Number.isFinite(blur) ? clamp(blur, 0, 40) : DEFAULT_SETTINGS.backgroundBlur,
     backgroundOpacity: Number.isFinite(opacity) ? clamp(opacity, 0, 1) : DEFAULT_SETTINGS.backgroundOpacity,
+    auth: parseAuth(raw.auth),
   };
 }
 
@@ -184,14 +217,16 @@ function parseBookmarks(raw: unknown, settings: Settings): BookmarkGroup[] {
 
 export async function loadDashboard(): Promise<Dashboard> {
   const settings = parseSettings(await readYaml("settings.yaml"));
-  const [servicesRaw, bookmarksRaw] = await Promise.all([
+  const [servicesRaw, bookmarksRaw, usersRaw] = await Promise.all([
     readYaml("services.yaml"),
     readYaml("bookmarks.yaml"),
+    readYaml("users.yaml"),
   ]);
   return {
     settings,
     groups: parseServices(servicesRaw, settings),
     bookmarks: parseBookmarks(bookmarksRaw, settings),
+    users: parseUsers(usersRaw),
     configDir: configDir(),
   };
 }

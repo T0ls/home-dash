@@ -5,6 +5,7 @@ import { ArrowUpRight, Search, X } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ServiceIcon } from "@/components/service-icon";
 import { StatusDot } from "@/components/status-dot";
+import { UserMenu, type ClientUser } from "@/components/user-menu";
 import { cn } from "@/lib/utils";
 import type { BookmarkGroup, ServiceGroup, Settings } from "@/lib/config";
 
@@ -48,10 +49,12 @@ export function Dashboard({
   settings,
   groups,
   bookmarks,
+  user,
 }: {
   settings: Settings;
   groups: ServiceGroup[];
   bookmarks: BookmarkGroup[];
+  user: ClientUser | null;
 }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -114,9 +117,24 @@ export function Dashboard({
   return (
     <TooltipProvider>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-8 sm:py-12">
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <span className="truncate text-sm font-medium tracking-wide text-white/60">{settings.title}</span>
+          {settings.auth.enabled && (
+            <UserMenu user={user} accountUrl={settings.auth.accountUrl} logoutUrl={settings.auth.logoutUrl} />
+          )}
+        </div>
+
         <header className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">{settings.title}</h1>
+          <div className="min-w-0">
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              {user ? (
+                <>
+                  Benvenuto, <span className="text-sky-300">{user.displayName.split(/\s+/)[0]}</span>
+                </>
+              ) : (
+                settings.title
+              )}
+            </h1>
             {settings.subtitle && <p className="mt-1.5 text-white/50">{settings.subtitle}</p>}
           </div>
           {settings.showClock && <Clock />}

@@ -7,6 +7,7 @@ Una dashboard self-hosted, ispirata a [gethomepage/homepage](https://github.com/
 - Indicatore di stato online/offline per ogni servizio (con latenza)
 - Ricerca istantanea: premi `/` per cercare, `Invio` apre il primo risultato
 - Le modifiche alla configurazione sono visibili al refresh, senza riavviare il container
+- Utenti riconosciuti tramite Authelia (nessuna password nella dashboard), con messaggio di benvenuto e menu account
 - Pensata per girare in un container Docker
 
 ## Avvio con Docker (consigliato)
@@ -72,6 +73,38 @@ Preferiti/link rapidi, mostrati sopra i servizi come chip compatti.
         icon: si-reddit
 ```
 
+### `config/users.yaml`
+
+Gli utenti da riconoscere. Non c'è login: l'identità arriva da **Authelia**, che tramite il reverse proxy **nginx** passa i dati dell'utente al container come header HTTP. Un utente viene riconosciuto confrontando `displayName` con il displayname di Authelia (senza distinzione maiuscole/minuscole); in alternativa si usa `username`.
+
+```yaml
+users:
+  - displayName: Mario Rossi   # uguale al displayname in Authelia
+    username: mario
+    email: mario@example.com
+    avatar: https://example.com/mario.png
+    role: Admin
+```
+
+Esempio di configurazione nginx (nel `location` che fa da proxy verso la dashboard, dopo `auth_request`):
+
+```nginx
+auth_request_set $user   $upstream_http_remote_user;
+auth_request_set $name   $upstream_http_remote_name;
+auth_request_set $email  $upstream_http_remote_email;
+auth_request_set $groups $upstream_http_remote_groups;
+proxy_set_header Remote-User   $user;
+proxy_set_header Remote-Name   $name;
+proxy_set_header Remote-Email  $email;
+proxy_set_header Remote-Groups $groups;
+```
+
+I nomi degli header si possono cambiare in `settings.yaml` → `auth.headers`. Se arriva un utente che non è in `users.yaml`, viene comunque salutato ma il menu segnala che manca nella config. Senza header, la dashboard mostra "Ospite".
+
+> **Importante:** gli header sono affidabili solo se la dashboard è raggiungibile **esclusivamente** passando da nginx. Non esporre la porta del container su reti non fidate, altrimenti chiunque può inviare un header `Remote-Name` falso.
+
+Per provare in locale senza Authelia, avvia il dev server con `DEV_REMOTE_NAME="Mario Rossi" DEV_REMOTE_USER=mario npm run dev` (ignorato in produzione).
+
 ### `config/settings.yaml`
 
 
@@ -87,6 +120,10 @@ Preferiti/link rapidi, mostrati sopra i servizi come chip compatti.
 | `backgroundImage`    | —                                    | URL di un'immagine di sfondo                 |
 | `backgroundBlur`     | `0`                                  | Sfocatura dello sfondo in px (0-40)          |
 | `backgroundOpacity`  | `0.35`                               | Visibilità dello sfondo (0-1)                |
+| `auth.enabled`       | `true`                               | Riconoscimento utenti tramite header         |
+| `auth.headers.*`     | `Remote-User/Name/Email/Groups`      | Nomi degli header inviati da nginx           |
+| `auth.accountUrl`    | —                                    | Link "Gestisci account" nel menu utente      |
+| `auth.logoutUrl`     | —                                    | Link "Esci" (es. logout di Authelia)         |
 
 Se un file YAML contiene un errore, la pagina mostra il messaggio con la riga da correggere.
 
