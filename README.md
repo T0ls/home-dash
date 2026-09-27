@@ -17,7 +17,7 @@ A self-hosted dashboard inspired by [gethomepage/homepage](https://github.com/ge
 docker compose up -d --build
 ```
 
-Rebuilds reuse the npm and Next.js caches (BuildKit, on by default with Compose), so a code change does not re-download dependencies. The running container is the same: config still comes from the mounted data folder, not from the image.
+A code-only change does not re-download npm packages: that layer is cached as long as `package.json` and the lockfile stay the same. The running container is the same either way: config still comes from the mounted data folder, not from the image. BuildKit is not required.
 The dashboard is available at `http://<server-ip>:3000`.
 
 ### Data folder
