@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { CustomizeForm } from "@/components/customize-form";
 import { loadDashboard } from "@/lib/config";
 import { getCurrentUser } from "@/lib/users";
-import { readUserHome } from "@/lib/user-home";
+import { filterByAccess, readUserHome, resolveHome } from "@/lib/user-home";
 
 export const metadata: Metadata = { title: "Customize home" };
 
@@ -13,6 +13,12 @@ export default async function CustomizePage() {
   await connection();
   const { settings, groups, bookmarks, users } = await loadDashboard();
   const user = await getCurrentUser(settings.auth, users);
+  const allowed = filterByAccess(groups, bookmarks, user);
+  const serviceIds = allowed.groups.flatMap((g) => g.services.map((s) => s.id));
+  const bookmarkIds = allowed.bookmarks.flatMap((g) => g.bookmarks.map((b) => b.id));
+  const resolved = user?.slug
+    ? resolveHome(await readUserHome(user.slug), serviceIds, bookmarkIds)
+    : null;
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-8 sm:py-12">
@@ -39,9 +45,20 @@ export default async function CustomizePage() {
             <h1 className="text-3xl font-semibold tracking-tight text-white">Customize your home</h1>
             <p className="mt-1.5 text-white/50">
               Pick and rearrange the services and bookmarks you want to see. Only you will see these changes.
+              New services added by the admin appear here automatically.
             </p>
           </header>
-          <CustomizeForm groups={groups} bookmarks={bookmarks} initial={await readUserHome(user.slug)} />
+          <CustomizeForm
+            groups={allowed.groups}
+            bookmarks={allowed.bookmarks}
+            initial={{
+              orderServices: resolved!.orderServices,
+              orderBookmarks: resolved!.orderBookmarks,
+              selectedServices: resolved!.orderServices.filter((id) => !resolved!.hiddenServices.includes(id)),
+              selectedBookmarks: resolved!.orderBookmarks.filter((id) => !resolved!.hiddenBookmarks.includes(id)),
+              customized: resolved!.customized,
+            }}
+          />
         </>
       )}
     </main>

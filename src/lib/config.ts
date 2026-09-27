@@ -14,6 +14,10 @@ export type Service = {
   icon?: string;
   ping?: string;
   target: "_blank" | "_self";
+  /** If set, only these usernames/displayNames may see the service. Empty/absent = everyone. */
+  users?: string[];
+  /** If set, only members of these Authelia groups may see the service. */
+  groups?: string[];
 };
 
 export type ServiceGroup = {
@@ -27,6 +31,8 @@ export type Bookmark = {
   href: string;
   icon?: string;
   target: "_blank" | "_self";
+  users?: string[];
+  groups?: string[];
 };
 
 export type BookmarkGroup = {
@@ -140,6 +146,9 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 
 const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
 
+const strList = (v: unknown) =>
+  Array.isArray(v) ? v.map(str).filter((x): x is string => Boolean(x)) : undefined;
+
 // Accepts both a list of single-key maps (homepage style) and a plain map.
 function entries(v: unknown): [string, unknown][] {
   if (Array.isArray(v)) return v.filter(isRecord).flatMap((item) => Object.entries(item));
@@ -208,6 +217,8 @@ function parseServices(raw: unknown, settings: Settings): ServiceGroup[] {
         icon: str(v.icon),
         ping,
         target: v.target === "_self" ? "_self" : v.target === "_blank" ? "_blank" : settings.target,
+        users: strList(v.users),
+        groups: strList(v.groups),
       };
     }),
   }));
@@ -228,6 +239,8 @@ function parseBookmarks(raw: unknown, settings: Settings): BookmarkGroup[] {
             href,
             icon: str(v.icon),
             target: v.target === "_self" ? "_self" : v.target === "_blank" ? "_blank" : settings.target,
+            users: strList(v.users),
+            groups: strList(v.groups),
           };
         })
         .filter((b): b is Bookmark => b !== null),

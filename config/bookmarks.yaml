@@ -1,5 +1,7 @@
 # Quick links / bookmarks, shown above the services.
 # Same grouped format as services.yaml.
+# Optional per-item access: users: [mario] and/or groups: [admins]
+# (omit both to show the bookmark to everyone).
 
 - Favorites:
     - YouTube:

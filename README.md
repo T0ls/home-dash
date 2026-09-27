@@ -66,7 +66,11 @@ docker run -d --name homepage -p 3000:3000 -v /srv/homedash:/app/data --restart 
         href: https://proxmox.home.lan:8006
         icon: proxmox
         ping: https://192.168.1.2:8006
+        users: [Giulio]          # only these people
+        groups: [admins]         # …or any of these Authelia groups
 ```
+
+Omit both `users` and `groups` to show the service to everyone. Guests (no Authelia headers) only see public services.
 
 | Field         | Description                                                                                          |
 | ------------- | ---------------------------------------------------------------------------------------------------- |
@@ -75,12 +79,14 @@ docker run -d --name homepage -p 3000:3000 -v /srv/homedash:/app/data --restart 
 | `icon`        | Dashboard Icons name (`jellyfin`), `si-<name>` for Simple Icons, an image URL, or an emoji           |
 | `ping`        | Alternate URL for the status check, or `false` to disable it                                         |
 | `target`      | `_blank` or `_self`, overrides the global setting                                                    |
+| `users`       | Optional list of Authelia usernames/displayNames allowed to see this service                         |
+| `groups`      | Optional list of Authelia groups allowed to see this service                                         |
 
 The status check runs **from the server** (the container), so use addresses the container can reach. Any HTTP response under 500 (including 401/403) counts as "online"; self-signed certificates are accepted.
 
 ### `config/bookmarks.yaml`
 
-Quick links shown above the services as compact chips.
+Quick links shown above the services as compact chips. Same optional `users` / `groups` fields as services.
 
 ```yaml
 - Favorites:
@@ -90,6 +96,7 @@ Quick links shown above the services as compact chips.
     - Reddit:
         href: https://reddit.com
         icon: si-reddit
+        users: [mario]   # optional — only these people
 ```
 
 ### `config/users.yaml`
@@ -124,7 +131,7 @@ Header names can be changed under `settings.yaml` → `auth.headers`. If a user 
 
 #### Personal home
 
-Each user listed in `users.yaml` can pick which services and bookmarks appear on their own home: user menu → **Customize home**. Drag the grip handle to rearrange them; the order is kept on their home. The choice is saved in `users/<username>/home.yaml` and only affects that user; everyone else keeps the full list. **Reset to default** deletes the file and shows everything again. Services are referenced as `Group/Name`, so renaming a service or group in `services.yaml` removes it from personal homes until it is selected again.
+Each user listed in `users.yaml` can pick which services and bookmarks appear on their own home: user menu → **Customize home**. Drag the grip handle to rearrange them; the order is kept on their home. The choice is saved in `users/<username>/home.yaml` as a list of **hidden** items plus an order — so when the admin adds a new service to `services.yaml`, it appears automatically for everyone who can access it. **Reset to default** deletes the file and shows everything again. Services are referenced as `Group/Name`.
 
 The user folder name is the Authelia username (set `username` in `users.yaml` to keep it stable); if no username is available, a slug of the display name is used.
 

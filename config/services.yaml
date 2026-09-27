@@ -10,6 +10,9 @@
 #   ping:        alternate URL for the status check (e.g. an internal address),
 #                or false to disable it
 #   target:      _blank or _self, overrides the global setting
+#   users:       list of Authelia usernames or displayNames that may see it
+#   groups:      list of Authelia groups that may see it
+#                (omit both users and groups to show it to everyone)
 
 - Media:
     - Jellyfin:
@@ -30,6 +33,9 @@
         href: https://192.168.1.2:8006
         description: Virtualization
         icon: proxmox
+        # Example: only admins and Giulio can see this
+        # users: [Giulio]
+        # groups: [admins]
     - Portainer:
         href: http://192.168.1.10:9000
         description: Docker container management

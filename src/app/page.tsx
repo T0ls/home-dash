@@ -3,7 +3,13 @@ import { connection } from "next/server";
 import { Dashboard } from "@/components/dashboard";
 import { ConfigError, loadDashboard } from "@/lib/config";
 import { getCurrentUser } from "@/lib/users";
-import { applyUserHome, ensureUserDir, readUserHome } from "@/lib/user-home";
+import {
+  applyUserHome,
+  ensureUserDir,
+  filterByAccess,
+  readUserHome,
+  resolveHome,
+} from "@/lib/user-home";
 
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
@@ -20,13 +26,16 @@ export default async function Page() {
   const result = await loadDashboard().catch((err: Error) => err);
   if (!(result instanceof Error)) {
     const user = await getCurrentUser(result.settings.auth, result.users);
-    let { groups, bookmarks } = result;
+    let { groups, bookmarks } = filterByAccess(result.groups, result.bookmarks, user);
     let customized = false;
     if (user?.slug) {
       await ensureUserDir(user.slug).catch(() => {});
       const home = await readUserHome(user.slug);
-      customized = home.services !== undefined || home.bookmarks !== undefined;
-      ({ groups, bookmarks } = applyUserHome(groups, bookmarks, home));
+      const serviceIds = groups.flatMap((g) => g.services.map((s) => s.id));
+      const bookmarkIds = bookmarks.flatMap((g) => g.bookmarks.map((b) => b.id));
+      const resolved = resolveHome(home, serviceIds, bookmarkIds);
+      customized = resolved.customized;
+      ({ groups, bookmarks } = applyUserHome(groups, bookmarks, resolved));
     }
     return (
       <>

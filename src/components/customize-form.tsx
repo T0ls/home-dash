@@ -32,23 +32,28 @@ import type { BookmarkGroup, Service, ServiceGroup } from "@/lib/config";
 type Props = {
   groups: ServiceGroup[];
   bookmarks: BookmarkGroup[];
-  initial: { services?: string[]; bookmarks?: string[] };
+  initial: {
+    orderServices: string[];
+    orderBookmarks: string[];
+    selectedServices: string[];
+    selectedBookmarks: string[];
+    customized: boolean;
+  };
 };
 
 function sameOrder(a: string[], b: string[]) {
   return a.length === b.length && a.every((id, i) => id === b[i]);
 }
 
-function useLayout(allIds: string[], initial?: string[]) {
-  const startSelected = useMemo(() => initial ?? allIds, [allIds, initial]);
-  const startOrder = useMemo(() => {
-    if (!initial) return allIds;
-    const picked = new Set(initial);
-    return [...initial, ...allIds.filter((id) => !picked.has(id))];
-  }, [allIds, initial]);
-
-  const [order, setOrder] = useState(startOrder);
-  const [selected, setSelected] = useState(() => new Set(startSelected));
+function useLayout(allIds: string[], startOrder: string[], startSelected: string[]) {
+  const [baseline] = useState(() => {
+    const preferred = startOrder.filter((id) => allIds.includes(id));
+    const order = [...preferred, ...allIds.filter((id) => !preferred.includes(id))];
+    const selected = startSelected.filter((id) => allIds.includes(id));
+    return { order, selected };
+  });
+  const [order, setOrder] = useState(baseline.order);
+  const [selected, setSelected] = useState(() => new Set(baseline.selected));
 
   const toggle = (id: string) =>
     setSelected((prev) => {
@@ -81,12 +86,9 @@ function useLayout(allIds: string[], initial?: string[]) {
     [...ids].sort((a, b) => order.indexOf(a) - order.indexOf(b));
 
   const dirty =
-    selected.size !== startSelected.length ||
-    [...selected].some((id) => !startSelected.includes(id)) ||
-    !sameOrder(
-      order.filter((id) => selected.has(id)),
-      startSelected,
-    );
+    selected.size !== baseline.selected.length ||
+    [...selected].some((id) => !baseline.selected.includes(id)) ||
+    !sameOrder(order, baseline.order);
 
   return { order, selected, toggle, setMany, reorder, sorted, dirty, value: order.filter((id) => selected.has(id)) };
 }
@@ -223,13 +225,13 @@ export function CustomizeForm({ groups, bookmarks, initial }: Props) {
   }, [groups]);
   const serviceIds = useMemo(() => groups.flatMap((g) => g.services.map((s) => s.id)), [groups]);
   const bookmarkIds = useMemo(() => bookmarks.flatMap((g) => g.bookmarks.map((b) => b.id)), [bookmarks]);
-  const services = useLayout(serviceIds, initial.services);
-  const marks = useLayout(bookmarkIds, initial.bookmarks);
+  const services = useLayout(serviceIds, initial.orderServices, initial.selectedServices);
+  const marks = useLayout(bookmarkIds, initial.orderBookmarks, initial.selectedBookmarks);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const dirty = services.dirty || marks.dirty;
-  const customized = initial.services !== undefined || initial.bookmarks !== undefined;
+  const customized = initial.customized;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -251,7 +253,14 @@ export function CustomizeForm({ groups, bookmarks, initial }: Props) {
   const save = () =>
     startTransition(async () => {
       setError(null);
-      const res = await saveHome({ services: services.value, bookmarks: marks.value });
+      const res = await saveHome({
+        services: services.value,
+        bookmarks: marks.value,
+        orderServices: services.order,
+        orderBookmarks: marks.order,
+        availableServices: serviceIds,
+        availableBookmarks: bookmarkIds,
+      });
       if (!res.ok) return setError(res.error);
       router.push("/");
       router.refresh();

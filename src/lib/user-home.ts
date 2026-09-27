@@ -2,16 +2,32 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
-import { usersDir, type BookmarkGroup, type ServiceGroup } from "@/lib/config";
+import { usersDir, type Bookmark, type BookmarkGroup, type Service, type ServiceGroup } from "@/lib/config";
+import type { CurrentUser } from "@/lib/users";
 import { log } from "@/lib/log";
 
 export { userSlug } from "@/lib/users";
 
 export type UserHome = {
-  /** ids ("Group/Name") of the services to show; undefined = show everything */
-  services?: string[];
-  bookmarks?: string[];
+  /** Services the user opted out of. New services not listed here show up automatically. */
+  hiddenServices?: string[];
+  hiddenBookmarks?: string[];
+  /** Preferred order of services (ids). Unknown ids are ignored; missing ones are appended. */
+  orderServices?: string[];
+  orderBookmarks?: string[];
   updatedAt?: string;
+  /** @deprecated legacy whitelist — migrated on read */
+  services?: string[];
+  /** @deprecated legacy whitelist — migrated on read */
+  bookmarks?: string[];
+};
+
+export type ResolvedHome = {
+  hiddenServices: string[];
+  hiddenBookmarks: string[];
+  orderServices: string[];
+  orderBookmarks: string[];
+  customized: boolean;
 };
 
 const HOME_FILE = "home.yaml";
@@ -36,11 +52,51 @@ export async function ensureUserDir(slug: string) {
 const strList = (v: unknown) =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "") : undefined;
 
+const norm = (s: string) => s.normalize("NFC").trim().toLowerCase();
+
+type Restricted = { users?: string[]; groups?: string[] };
+
+/** Public (no users/groups) → everyone. Otherwise match Authelia username, displayName or groups. */
+export function canAccess(item: Restricted, user: CurrentUser | null): boolean {
+  const hasUsers = Boolean(item.users?.length);
+  const hasGroups = Boolean(item.groups?.length);
+  if (!hasUsers && !hasGroups) return true;
+  if (!user) return false;
+  if (hasUsers) {
+    const names = [user.username, user.displayName].filter(Boolean).map((s) => norm(s!));
+    if (item.users!.some((u) => names.includes(norm(u)))) return true;
+  }
+  if (hasGroups) {
+    const ug = new Set(user.groups.map(norm));
+    if (item.groups!.some((g) => ug.has(norm(g)))) return true;
+  }
+  return false;
+}
+
+export function filterByAccess(
+  groups: ServiceGroup[],
+  bookmarks: BookmarkGroup[],
+  user: CurrentUser | null,
+): { groups: ServiceGroup[]; bookmarks: BookmarkGroup[] } {
+  return {
+    groups: groups
+      .map((g) => ({ ...g, services: g.services.filter((s) => canAccess(s, user)) }))
+      .filter((g) => g.services.length > 0),
+    bookmarks: bookmarks
+      .map((g) => ({ ...g, bookmarks: g.bookmarks.filter((b) => canAccess(b, user)) }))
+      .filter((g) => g.bookmarks.length > 0),
+  };
+}
+
 export async function readUserHome(slug: string): Promise<UserHome> {
   try {
     const raw = YAML.parse(await fs.readFile(/*turbopackIgnore: true*/ path.join(userDir(slug), HOME_FILE), "utf8"));
     if (typeof raw !== "object" || raw === null) return {};
     return {
+      hiddenServices: strList(raw.hiddenServices),
+      hiddenBookmarks: strList(raw.hiddenBookmarks),
+      orderServices: strList(raw.orderServices),
+      orderBookmarks: strList(raw.orderBookmarks),
       services: strList(raw.services),
       bookmarks: strList(raw.bookmarks),
       updatedAt: typeof raw.updatedAt === "string" ? raw.updatedAt : undefined,
@@ -50,23 +106,83 @@ export async function readUserHome(slug: string): Promise<UserHome> {
   }
 }
 
-export async function writeUserHome(slug: string, home: UserHome) {
+/** Convert on-disk home (including legacy whitelist) into hidden + order for the available ids. */
+export function resolveHome(home: UserHome, serviceIds: string[], bookmarkIds: string[]): ResolvedHome {
+  const customized =
+    home.updatedAt !== undefined ||
+    home.hiddenServices !== undefined ||
+    home.hiddenBookmarks !== undefined ||
+    home.orderServices !== undefined ||
+    home.orderBookmarks !== undefined ||
+    home.services !== undefined ||
+    home.bookmarks !== undefined;
+
+  const availableS = new Set(serviceIds);
+  const availableB = new Set(bookmarkIds);
+
+  let hiddenServices: string[];
+  let orderServices: string[];
+  if (home.hiddenServices !== undefined || home.orderServices !== undefined) {
+    hiddenServices = (home.hiddenServices ?? []).filter((id) => availableS.has(id));
+    const preferred = (home.orderServices ?? []).filter((id) => availableS.has(id));
+    orderServices = [...preferred, ...serviceIds.filter((id) => !preferred.includes(id))];
+  } else if (home.services !== undefined) {
+    // Legacy: services was a whitelist of what to show.
+    const shown = home.services.filter((id) => availableS.has(id));
+    hiddenServices = serviceIds.filter((id) => !shown.includes(id));
+    orderServices = [...shown, ...serviceIds.filter((id) => !shown.includes(id))];
+  } else {
+    hiddenServices = [];
+    orderServices = serviceIds;
+  }
+
+  let hiddenBookmarks: string[];
+  let orderBookmarks: string[];
+  if (home.hiddenBookmarks !== undefined || home.orderBookmarks !== undefined) {
+    hiddenBookmarks = (home.hiddenBookmarks ?? []).filter((id) => availableB.has(id));
+    const preferred = (home.orderBookmarks ?? []).filter((id) => availableB.has(id));
+    orderBookmarks = [...preferred, ...bookmarkIds.filter((id) => !preferred.includes(id))];
+  } else if (home.bookmarks !== undefined) {
+    const shown = home.bookmarks.filter((id) => availableB.has(id));
+    hiddenBookmarks = bookmarkIds.filter((id) => !shown.includes(id));
+    orderBookmarks = [...shown, ...bookmarkIds.filter((id) => !shown.includes(id))];
+  } else {
+    hiddenBookmarks = [];
+    orderBookmarks = bookmarkIds;
+  }
+
+  return { hiddenServices, hiddenBookmarks, orderServices, orderBookmarks, customized };
+}
+
+export async function writeUserHome(
+  slug: string,
+  home: {
+    hiddenServices: string[];
+    hiddenBookmarks: string[];
+    orderServices: string[];
+    orderBookmarks: string[];
+  },
+) {
   await ensureUserDir(slug);
   const body = YAML.stringify({
-    services: home.services ?? [],
-    bookmarks: home.bookmarks ?? [],
+    hiddenServices: home.hiddenServices,
+    hiddenBookmarks: home.hiddenBookmarks,
+    orderServices: home.orderServices,
+    orderBookmarks: home.orderBookmarks,
     updatedAt: new Date().toISOString(),
   });
   const header =
     "# Personal home layout. Managed from the dashboard (user menu → Customize home).\n" +
-    '# Entries reference services/bookmarks from the general config as "Group/Name".\n';
+    "# hidden*: services/bookmarks you turned off (new ones not listed here appear automatically).\n" +
+    "# order*: preferred display order as Group/Name.\n";
   const file = path.join(userDir(slug), HOME_FILE);
   const tmp = `${file}.${process.pid}.tmp`;
   await fs.writeFile(/*turbopackIgnore: true*/ tmp, header + body);
   await fs.rename(/*turbopackIgnore: true*/ tmp, file);
   log.info(
     "users",
-    `${slug} saved personal home: ${home.services?.length ?? 0} services, ${home.bookmarks?.length ?? 0} bookmarks`,
+    `${slug} saved personal home: ${home.orderServices.length - home.hiddenServices.length} services visible, ` +
+      `${home.hiddenServices.length} hidden`,
     false,
   );
 }
@@ -76,24 +192,53 @@ export async function deleteUserHome(slug: string) {
   log.info("users", `${slug} reset personal home to default`, false);
 }
 
-export function applyUserHome(groups: ServiceGroup[], bookmarks: BookmarkGroup[], home: UserHome) {
-  const keep = <T extends { id: string }>(items: T[], ids?: string[]) => {
-    if (!ids) return items;
-    const order = new Map(ids.map((id, i) => [id, i]));
-    return items.filter((i) => order.has(i.id)).sort((a, b) => order.get(a.id)! - order.get(b.id)!);
-  };
-  const groupRank = (g: { services: { id: string }[] }) => {
-    if (!home.services?.length) return 0;
-    const ranks = g.services.map((s) => home.services!.indexOf(s.id)).filter((i) => i >= 0);
+function applyOrder<T extends { id: string }>(items: T[], order: string[], hidden: Set<string>) {
+  const byId = new Map(items.map((i) => [i.id, i]));
+  const out: T[] = [];
+  for (const id of order) {
+    const item = byId.get(id);
+    if (item && !hidden.has(id)) {
+      out.push(item);
+      byId.delete(id);
+    }
+  }
+  for (const item of byId.values()) {
+    if (!hidden.has(item.id)) out.push(item);
+  }
+  return out;
+}
+
+export function applyUserHome(
+  groups: ServiceGroup[],
+  bookmarks: BookmarkGroup[],
+  resolved: ResolvedHome,
+): { groups: ServiceGroup[]; bookmarks: BookmarkGroup[] } {
+  const hiddenS = new Set(resolved.hiddenServices);
+  const hiddenB = new Set(resolved.hiddenBookmarks);
+
+  const nextGroups = groups
+    .map((g) => ({
+      ...g,
+      services: applyOrder(g.services, resolved.orderServices, hiddenS),
+    }))
+    .filter((g) => g.services.length > 0);
+
+  const groupRank = (g: { services: Service[] }) => {
+    const ranks = g.services
+      .map((s) => resolved.orderServices.indexOf(s.id))
+      .filter((i) => i >= 0);
     return ranks.length ? Math.min(...ranks) : Number.MAX_SAFE_INTEGER;
   };
+
+  const nextBookmarks = bookmarks
+    .map((g) => ({
+      ...g,
+      bookmarks: applyOrder(g.bookmarks as Bookmark[], resolved.orderBookmarks, hiddenB),
+    }))
+    .filter((g) => g.bookmarks.length > 0);
+
   return {
-    groups: groups
-      .map((g) => ({ ...g, services: keep(g.services, home.services) }))
-      .filter((g) => g.services.length > 0)
-      .sort((a, b) => groupRank(a) - groupRank(b)),
-    bookmarks: bookmarks
-      .map((g) => ({ ...g, bookmarks: keep(g.bookmarks, home.bookmarks) }))
-      .filter((g) => g.bookmarks.length > 0),
+    groups: nextGroups.sort((a, b) => groupRank(a) - groupRank(b)),
+    bookmarks: nextBookmarks,
   };
 }
