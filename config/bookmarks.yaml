@@ -2,6 +2,10 @@
 # Same grouped format as services.yaml.
 # Optional per-item access: users: [mario] and/or groups: [admins]
 # (omit both to show the bookmark to everyone).
+#
+# icon: same choices as services.yaml (catalog name, si-<name>, a file in
+# icons/, an image URL, or an emoji). Browse examples at
+# https://dashboardicons.com/
 
 - Favorites:
     - YouTube:

@@ -14,6 +14,8 @@ target: _blank
 # they are shown, then serve that copy. The dashboard can then show those icons
 # with no internet. Your own files in the icons/ folder (next to config/) are
 # always served locally, whether this is on or off.
+# When choosing icon: in services.yaml or bookmarks.yaml, browse examples at
+# https://dashboardicons.com/
 cacheIcons: false
 
 # Check whether services are reachable (green/red status dot).

@@ -10,6 +10,7 @@ services:
       # Data root. Inside it the app uses:
       #   config/          general config (settings, services, bookmarks, users)
       #   icons/           your own icon files (icon: mio-logo.png)
+      #                    catalog examples: https://dashboardicons.com/
       #   cache/icons/     CDN copies, only when cacheIcons is true
       #   users/<name>/    one folder per user with their personal files
       # An empty folder is seeded with the example config on first start.

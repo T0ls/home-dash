@@ -3,7 +3,8 @@
 # Each service accepts:
 #   href:        link to open (required to make it clickable)
 #   description: short description
-#   icon:        - name from https://dashboard-icons.homarr.dev (e.g. jellyfin, proxmox)
+#   icon:        - name from https://dashboard-icons.homarr.dev (e.g. jellyfin, proxmox).
+#                  Browse examples at https://dashboardicons.com/
 #                - "si-<name>" for Simple Icons (e.g. si-github)
 #                - a file in the icons/ folder of the data volume (e.g. mio-logo.png)
 #                - an image URL (https://...)
