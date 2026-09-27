@@ -56,8 +56,9 @@ const norm = (s: string) => s.normalize("NFC").trim().toLowerCase();
 
 type Restricted = { users?: string[]; groups?: string[] };
 
-/** Public (no users/groups) → everyone. Otherwise match Authelia username, displayName or groups. */
+/** Public (no users/groups) → everyone. Role "admin" sees everything. Otherwise match Authelia username, displayName or groups. */
 export function canAccess(item: Restricted, user: CurrentUser | null): boolean {
+  if (user?.role && norm(user.role) === "admin") return true;
   const hasUsers = Boolean(item.users?.length);
   const hasGroups = Boolean(item.groups?.length);
   if (!hasUsers && !hasGroups) return true;

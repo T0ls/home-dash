@@ -70,7 +70,7 @@ docker run -d --name homepage -p 3000:3000 -v /srv/homedash:/app/data --restart 
         groups: [admins]         # …or any of these Authelia groups
 ```
 
-Omit both `users` and `groups` to show the service to everyone. Guests (no Authelia headers) only see public services.
+Omit both `users` and `groups` to show the service to everyone. A user whose `role` in `users.yaml` is `admin` (any casing) sees every service, including restricted ones. Guests (no Authelia headers) only see public services.
 
 | Field         | Description                                                                                          |
 | ------------- | ---------------------------------------------------------------------------------------------------- |

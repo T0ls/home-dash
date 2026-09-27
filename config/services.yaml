@@ -12,7 +12,8 @@
 #   target:      _blank or _self, overrides the global setting
 #   users:       list of Authelia usernames or displayNames that may see it
 #   groups:      list of Authelia groups that may see it
-#                (omit both users and groups to show it to everyone)
+#                (omit both users and groups to show it to everyone;
+#                 role: admin in users.yaml always sees every service)
 
 - Media:
     - Jellyfin:
