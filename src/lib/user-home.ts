@@ -82,10 +82,16 @@ export function applyUserHome(groups: ServiceGroup[], bookmarks: BookmarkGroup[]
     const order = new Map(ids.map((id, i) => [id, i]));
     return items.filter((i) => order.has(i.id)).sort((a, b) => order.get(a.id)! - order.get(b.id)!);
   };
+  const groupRank = (g: { services: { id: string }[] }) => {
+    if (!home.services?.length) return 0;
+    const ranks = g.services.map((s) => home.services!.indexOf(s.id)).filter((i) => i >= 0);
+    return ranks.length ? Math.min(...ranks) : Number.MAX_SAFE_INTEGER;
+  };
   return {
     groups: groups
       .map((g) => ({ ...g, services: keep(g.services, home.services) }))
-      .filter((g) => g.services.length > 0),
+      .filter((g) => g.services.length > 0)
+      .sort((a, b) => groupRank(a) - groupRank(b)),
     bookmarks: bookmarks
       .map((g) => ({ ...g, bookmarks: keep(g.bookmarks, home.bookmarks) }))
       .filter((g) => g.bookmarks.length > 0),

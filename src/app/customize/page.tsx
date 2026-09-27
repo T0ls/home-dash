@@ -38,7 +38,7 @@ export default async function CustomizePage() {
           <header className="mb-8">
             <h1 className="text-3xl font-semibold tracking-tight text-white">Customize your home</h1>
             <p className="mt-1.5 text-white/50">
-              Pick the services and bookmarks you want to see. Only you will see these changes.
+              Pick and rearrange the services and bookmarks you want to see. Only you will see these changes.
             </p>
           </header>
           <CustomizeForm groups={groups} bookmarks={bookmarks} initial={await readUserHome(user.slug)} />

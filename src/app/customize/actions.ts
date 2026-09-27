@@ -20,14 +20,13 @@ export async function saveHome(selection: { services: string[]; bookmarks: strin
     const { dashboard, slug } = await requireUser();
     if (!slug) return { ok: false, error: "You need to be signed in and listed in users.yaml." };
 
-    const serviceIds = dashboard.groups.flatMap((g) => g.services.map((s) => s.id));
-    const bookmarkIds = dashboard.bookmarks.flatMap((g) => g.bookmarks.map((b) => b.id));
-    const wantServices = new Set(selection.services);
-    const wantBookmarks = new Set(selection.bookmarks);
+    const serviceIds = new Set(dashboard.groups.flatMap((g) => g.services.map((s) => s.id)));
+    const bookmarkIds = new Set(dashboard.bookmarks.flatMap((g) => g.bookmarks.map((b) => b.id)));
 
     await writeUserHome(slug, {
-      services: serviceIds.filter((id) => wantServices.has(id)),
-      bookmarks: bookmarkIds.filter((id) => wantBookmarks.has(id)),
+      // Keep the order the client sent (from drag-and-drop); drop anything not in the general config.
+      services: selection.services.filter((id) => serviceIds.has(id)),
+      bookmarks: selection.bookmarks.filter((id) => bookmarkIds.has(id)),
     });
     revalidatePath("/");
     return { ok: true };

@@ -123,7 +123,7 @@ Header names can be changed under `settings.yaml` → `auth.headers`. If a user 
 
 #### Personal home
 
-Each user listed in `users.yaml` can pick which services and bookmarks appear on their own home: user menu → **Customize home**. The choice is saved in `users/<username>/home.yaml` and only affects that user; everyone else keeps the full list. **Reset to default** deletes the file and shows everything again. Services are referenced as `Group/Name`, so renaming a service or group in `services.yaml` removes it from personal homes until it is selected again.
+Each user listed in `users.yaml` can pick which services and bookmarks appear on their own home: user menu → **Customize home**. Drag the grip handle to rearrange them; the order is kept on their home. The choice is saved in `users/<username>/home.yaml` and only affects that user; everyone else keeps the full list. **Reset to default** deletes the file and shows everything again. Services are referenced as `Group/Name`, so renaming a service or group in `services.yaml` removes it from personal homes until it is selected again.
 
 The user folder name is the Authelia username (set `username` in `users.yaml` to keep it stable); if no username is available, a slug of the display name is used.
 
