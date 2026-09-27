@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
 import { parseUsers, type UserConfig } from "@/lib/users";
+import { log } from "@/lib/log";
 
 export type Service = {
   /** "Group/Name", stable across requests; used for status checks and per-user selections */
@@ -118,12 +119,18 @@ async function readYaml(file: string): Promise<unknown> {
     } catch {
       return null;
     }
-    await fs.mkdir(/*turbopackIgnore: true*/ configDir(), { recursive: true }).catch(() => {});
-    await fs.writeFile(/*turbopackIgnore: true*/ full, raw).catch(() => {});
+    try {
+      await fs.mkdir(/*turbopackIgnore: true*/ configDir(), { recursive: true });
+      await fs.writeFile(/*turbopackIgnore: true*/ full, raw);
+      log.info("config", `${full} was missing, created it from the example`);
+    } catch (err) {
+      log.warn("config", `${full} is missing and can't be created (${(err as Error).message}); using the example`);
+    }
   }
   try {
     return YAML.parse(raw);
   } catch (err) {
+    log.error("config", `${file}: ${(err as Error).message.split("\n")[0]}`);
     throw new ConfigError((err as Error).message, file);
   }
 }

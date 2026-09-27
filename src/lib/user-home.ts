@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
 import { usersDir, type BookmarkGroup, type ServiceGroup } from "@/lib/config";
+import { log } from "@/lib/log";
 
 export { userSlug } from "@/lib/users";
 
@@ -23,7 +24,13 @@ export function userDir(slug: string) {
 }
 
 export async function ensureUserDir(slug: string) {
-  await fs.mkdir(/*turbopackIgnore: true*/ userDir(slug), { recursive: true });
+  try {
+    const created = await fs.mkdir(/*turbopackIgnore: true*/ userDir(slug), { recursive: true });
+    if (created) log.info("users", `created folder ${userDir(slug)}`, false);
+  } catch (err) {
+    log.error("users", `can't create ${userDir(slug)}: ${(err as Error).message}`);
+    throw err;
+  }
 }
 
 const strList = (v: unknown) =>
@@ -57,10 +64,16 @@ export async function writeUserHome(slug: string, home: UserHome) {
   const tmp = `${file}.${process.pid}.tmp`;
   await fs.writeFile(/*turbopackIgnore: true*/ tmp, header + body);
   await fs.rename(/*turbopackIgnore: true*/ tmp, file);
+  log.info(
+    "users",
+    `${slug} saved personal home: ${home.services?.length ?? 0} services, ${home.bookmarks?.length ?? 0} bookmarks`,
+    false,
+  );
 }
 
 export async function deleteUserHome(slug: string) {
   await fs.rm(/*turbopackIgnore: true*/ path.join(userDir(slug), HOME_FILE), { force: true });
+  log.info("users", `${slug} reset personal home to default`, false);
 }
 
 export function applyUserHome(groups: ServiceGroup[], bookmarks: BookmarkGroup[], home: UserHome) {

@@ -1,6 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 import type { AuthSettings } from "@/lib/config";
+import { log } from "@/lib/log";
 
 export type UserConfig = {
   displayName: string;
@@ -87,7 +88,17 @@ export async function getCurrentUser(auth: AuthSettings, users: UserConfig[]): P
     mock = Boolean(name || username);
   }
 
-  if (!name && !username) return null;
+  const from = h.get("x-real-ip") ?? h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const via = `host=${h.get("host") ?? "?"} from=${from}`;
+
+  if (!name && !username) {
+    log.warn(
+      "auth",
+      `no identity headers (${auth.headers.name}, ${auth.headers.user}) on ${via} → showing Guest. ` +
+        "Open the dashboard through nginx (not ip:port) and check proxy_set_header in its location block.",
+    );
+    return null;
+  }
 
   const groups = (groupsRaw ?? "")
     .split(",")
@@ -97,6 +108,15 @@ export async function getCurrentUser(auth: AuthSettings, users: UserConfig[]): P
   const match =
     users.find((u) => name && norm(u.displayName) === norm(name)) ??
     users.find((u) => username && u.username && norm(u.username) === norm(username));
+
+  const who = `"${name ?? ""}"${username ? ` (user: ${username})` : ""}`;
+  if (mock) log.info("auth", `${who} simulated via DEV_REMOTE_* env vars`);
+  else if (match) log.info("auth", `${who} recognized as ${match.displayName} [${via}]`);
+  else
+    log.warn(
+      "auth",
+      `${who} sent by Authelia but not found in users.yaml (known: ${users.map((u) => u.displayName).join(", ") || "none"}) [${via}]`,
+    );
 
   return {
     slug: match ? userSlug({ username: match.username ?? username, displayName: match.displayName }) : undefined,

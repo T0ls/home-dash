@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { loadDashboard } from "@/lib/config";
 import { getCurrentUser } from "@/lib/users";
 import { deleteUserHome, writeUserHome } from "@/lib/user-home";
+import { log } from "@/lib/log";
 
 export type SaveResult = { ok: true } | { ok: false; error: string };
 
@@ -31,6 +32,7 @@ export async function saveHome(selection: { services: string[]; bookmarks: strin
     revalidatePath("/");
     return { ok: true };
   } catch (err) {
+    log.error("users", `save failed: ${(err as Error).message}`, false);
     return { ok: false, error: `Could not save: ${(err as Error).message}` };
   }
 }
@@ -43,6 +45,7 @@ export async function resetHome(): Promise<SaveResult> {
     revalidatePath("/");
     return { ok: true };
   } catch (err) {
+    log.error("users", `reset failed: ${(err as Error).message}`, false);
     return { ok: false, error: `Could not reset: ${(err as Error).message}` };
   }
 }

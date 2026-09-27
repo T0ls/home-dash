@@ -127,7 +127,7 @@ Each user listed in `users.yaml` can pick which services and bookmarks appear on
 
 The user folder name is the Authelia username (set `username` in `users.yaml` to keep it stable); if no username is available, a slug of the display name is used.
 
-**Troubleshooting:** open `https://<your-dashboard>/api/whoami` through nginx. It shows which identity headers reached the container, whether they match `users.yaml`, and which config folder is in use.
+**Troubleshooting:** run `docker compose logs -f homedash` (use your service name) and open the dashboard. Each visit logs whether the identity headers arrived and which user they matched; startup logs show the data folder, whether it is writable and the configured users.
 
 To try locally without Authelia, start the dev server with `DEV_REMOTE_NAME="Mario Rossi" DEV_REMOTE_USER=mario npm run dev` (ignored in production).
 
