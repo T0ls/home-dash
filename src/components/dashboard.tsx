@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowUpRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ServiceIcon } from "@/components/service-icon";
-import { StatusDot } from "@/components/status-dot";
+import { ScanStatusButton, StatusDot, StatusScanProvider } from "@/components/status-dot";
 import { UserMenu, type ClientUser } from "@/components/user-menu";
 import { cn } from "@/lib/utils";
 import type { BookmarkGroup, ServiceGroup, Settings } from "@/lib/config";
@@ -115,12 +115,14 @@ export function Dashboard({
       .filter((g) => g.bookmarks.length > 0);
   }, [bookmarks, query]);
 
+  const hasStatus = groups.some((group) => group.services.some((service) => service.ping));
   const firstMatch = filtered[0]?.services.find((s) => s.href) ?? filteredBookmarks[0]?.bookmarks[0];
   const total = groups.reduce((n, g) => n + g.services.length, 0);
   const bookmarkTotal = bookmarks.reduce((n, g) => n + g.bookmarks.length, 0);
 
   return (
-    <TooltipProvider>
+    <StatusScanProvider>
+      <TooltipProvider>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-8 sm:py-12">
         <div className="mb-8 flex items-center justify-between gap-4">
           <span className="truncate text-sm font-medium tracking-wide text-white/60">{settings.title}</span>
@@ -151,40 +153,43 @@ export function Dashboard({
         </header>
 
         {(total > 0 || bookmarkTotal > 0) && (
-          <form
-            className="relative mb-8"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (query && firstMatch?.href) window.open(firstMatch.href, firstMatch.target);
-            }}
-          >
-            <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-white/40" />
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              placeholder={`Search ${total + bookmarkTotal} links…`}
-              aria-label="Search services and bookmarks"
-              className="h-12 w-full rounded-xl border border-white/10 bg-white/5 pr-12 pl-11 text-base text-white outline-none placeholder:text-white/40 focus-visible:border-sky-400/50 focus-visible:ring-3 focus-visible:ring-sky-400/30"
-            />
-            {query ? (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-white/50 hover:bg-white/10 hover:text-white"
-                aria-label="Clear search"
-              >
-                <X className="size-4" />
-              </button>
-            ) : (
-              <kbd className="pointer-events-none absolute top-1/2 right-4 hidden -translate-y-1/2 rounded border border-white/15 px-1.5 font-mono text-xs text-white/40 sm:block">
-                /
-              </kbd>
-            )}
-          </form>
+          <div className="mb-8 flex items-center gap-2">
+            <form
+              className="relative min-w-0 flex-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (query && firstMatch?.href) window.open(firstMatch.href, firstMatch.target);
+              }}
+            >
+              <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-white/40" />
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder={`Search ${total + bookmarkTotal} links…`}
+                aria-label="Search services and bookmarks"
+                className="h-12 w-full rounded-xl border border-white/10 bg-white/5 pr-12 pl-11 text-base text-white outline-none placeholder:text-white/40 focus-visible:border-sky-400/50 focus-visible:ring-3 focus-visible:ring-sky-400/30"
+              />
+              {query ? (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-white/50 hover:bg-white/10 hover:text-white"
+                  aria-label="Clear search"
+                >
+                  <X className="size-4" />
+                </button>
+              ) : (
+                <kbd className="pointer-events-none absolute top-1/2 right-4 hidden -translate-y-1/2 rounded border border-white/15 px-1.5 font-mono text-xs text-white/40 sm:block">
+                  /
+                </kbd>
+              )}
+            </form>
+            {hasStatus && <ScanStatusButton />}
+          </div>
         )}
 
         {filteredBookmarks.length > 0 && (
@@ -278,7 +283,8 @@ export function Dashboard({
           </div>
         )}
       </main>
-    </TooltipProvider>
+      </TooltipProvider>
+    </StatusScanProvider>
   );
 }
 
